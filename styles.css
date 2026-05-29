@@ -314,6 +314,22 @@ button {
   grid-column: 1 / -1;
 }
 
+.form-subhead {
+  grid-column: 1 / -1;
+  margin-top: 6px;
+  padding: 12px 0 2px;
+  color: var(--ink);
+  font-size: 0.98rem;
+  font-weight: 900;
+  border-top: 1px solid var(--line);
+}
+
+.form-subhead:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
 .field label,
 .date-group legend,
 .toggle-row span {

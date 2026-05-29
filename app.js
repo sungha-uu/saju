@@ -4,9 +4,10 @@ const services = {
     title: "사주팔자",
     description: "만세력 데이터와 명리 계산값을 바탕으로 사주 구조를 분석합니다.",
     fields: [
-      { name: "nickname", label: "이름 또는 별명", type: "text", placeholder: "예: 유성하" },
+      { name: "nickname", label: "이름", type: "text", full: true },
       { name: "birthDate", label: "생년월일", type: "dateGroup" },
       { name: "birthTime", label: "출생 시간", type: "time" },
+      { name: "calendar", label: "양력/음력", type: "select", options: ["양력", "음력"] },
       {
         name: "gender",
         label: "성별",
@@ -18,7 +19,6 @@ const services = {
           { label: "여성", value: "여성" },
         ],
       },
-      { name: "calendar", label: "달력 기준", type: "select", options: ["양력", "음력"] },
       { name: "unknownTime", label: "출생 시간을 몰라요", type: "checkbox" },
       {
         name: "question",
@@ -34,11 +34,48 @@ const services = {
     title: "궁합",
     description: "두 사람의 기본 흐름을 비교해 끌림과 조율 포인트를 확인합니다.",
     fields: [
-      { name: "myName", label: "나의 이름", type: "text", placeholder: "예: 하린" },
-      { name: "myBirthDate", label: "나의 생년월일", type: "dateGroup" },
-      { name: "theirName", label: "상대 이름", type: "text", placeholder: "예: 도윤" },
-      { name: "theirBirthDate", label: "상대 생년월일", type: "dateGroup" },
-      { name: "relation", label: "관계 유형", type: "select", options: ["연인", "썸", "친구", "동료", "가족"] },
+      { type: "section", label: "나의 정보" },
+      { name: "myName", label: "이름", type: "text", full: true },
+      { name: "myBirthDate", label: "생년월일", type: "dateGroup" },
+      { name: "myBirthTime", label: "출생 시간", type: "time" },
+      { name: "myCalendar", label: "양력/음력", type: "select", options: ["양력", "음력"] },
+      {
+        name: "myGender",
+        label: "성별",
+        type: "select",
+        required: true,
+        placeholder: "성별 선택",
+        options: [
+          { label: "남성", value: "남성" },
+          { label: "여성", value: "여성" },
+        ],
+      },
+      { name: "myUnknownTime", label: "출생 시간을 몰라요", type: "checkbox" },
+      { type: "section", label: "상대방 정보" },
+      { name: "theirName", label: "이름", type: "text", full: true },
+      { name: "theirBirthDate", label: "생년월일", type: "dateGroup" },
+      { name: "theirBirthTime", label: "출생 시간", type: "time" },
+      { name: "theirCalendar", label: "양력/음력", type: "select", options: ["양력", "음력"] },
+      {
+        name: "theirGender",
+        label: "성별",
+        type: "select",
+        required: true,
+        placeholder: "성별 선택",
+        options: [
+          { label: "남성", value: "남성" },
+          { label: "여성", value: "여성" },
+        ],
+      },
+      { name: "theirUnknownTime", label: "출생 시간을 몰라요", type: "checkbox" },
+      { name: "relation", label: "관계 유형", type: "select", options: ["연인", "썸", "친구", "동료", "가족"], full: true },
+      {
+        name: "question",
+        label: "궁금한 점",
+        type: "textarea",
+        placeholder: "예: 결혼까지 생각해도 괜찮을까?",
+        full: true,
+      },
     ],
   },
   daily: {
@@ -178,7 +215,7 @@ function renderService(serviceKey) {
   $("#serviceTitle").textContent = service.title;
   $("#serviceDescription").textContent = service.description;
   $("#formTitle").textContent = `${service.title} 정보 입력`;
-  $("#resultTitle").textContent = `${service.title} 결과`;
+  $("#resultTitle").textContent = "프롬프트 생성 완료";
 
   renderForm(serviceKey, service.fields);
   hideResult();
@@ -191,8 +228,7 @@ function renderForm(serviceKey, fields) {
   form.innerHTML = `
     <div class="field-grid">${fields.map((field) => renderField(field)).join("")}</div>
     <div class="form-actions">
-      <button class="primary-button" type="submit"><i data-lucide="wand-sparkles"></i>결과 보기</button>
-      <button class="ghost-button" type="button" data-action="sample-fill"><i data-lucide="pen-line"></i>샘플 입력</button>
+      <button class="primary-button" type="submit"><i data-lucide="wand-sparkles"></i>프롬프트 생성</button>
     </div>
   `;
 
@@ -201,11 +237,13 @@ function renderForm(serviceKey, fields) {
     if (!validateForm(serviceKey, form)) return;
     renderLoadingThenResult(serviceKey, Object.fromEntries(new FormData(form).entries()));
   };
-
-  form.querySelector("[data-action='sample-fill']").addEventListener("click", () => fillSample(serviceKey, form));
 }
 
 function renderField(field) {
+  if (field.type === "section") {
+    return `<div class="form-subhead">${field.label}</div>`;
+  }
+
   if (field.type === "select") {
     const options = field.options.map((option) => (typeof option === "string" ? { label: option, value: option } : option));
     return `
@@ -230,7 +268,7 @@ function renderField(field) {
 
   if (field.type === "dateGroup") {
     return `
-      <fieldset class="field date-group full" data-date-group="${field.name}">
+      <fieldset class="field date-group ${field.full ? "full" : ""}" data-date-group="${field.name}">
         <legend>${field.label}</legend>
         <div class="date-inputs">
           <input name="${field.name}Year" type="text" inputmode="numeric" autocomplete="bday-year" maxlength="4" placeholder="년" aria-label="${field.label} 년" />
@@ -251,7 +289,7 @@ function renderField(field) {
   }
 
   return `
-    <div class="field">
+    <div class="field ${field.full ? "full" : ""}">
       <label for="${field.name}">${field.label}</label>
       <input id="${field.name}" name="${field.name}" type="${field.type}" placeholder="${field.placeholder || ""}" />
     </div>
@@ -262,36 +300,23 @@ function validateForm(serviceKey, form) {
   const errorBox = form.querySelector(".form-error");
   if (errorBox) errorBox.remove();
 
-  if (serviceKey === "saju" && !form.elements.gender?.value) {
-    form.insertAdjacentHTML("afterbegin", `<div class="form-error">사주팔자는 대운 순행/역행 계산 때문에 성별을 반드시 선택해야 합니다.</div>`);
-    form.elements.gender.focus();
-    return false;
+  const requiredGenderFields = {
+    saju: [["gender", "성별을 선택해야 프롬프트를 생성할 수 있습니다."]],
+    compatibility: [
+      ["myGender", "나의 성별을 선택해야 궁합 프롬프트를 생성할 수 있습니다."],
+      ["theirGender", "상대방 성별을 선택해야 궁합 프롬프트를 생성할 수 있습니다."],
+    ],
+  }[serviceKey] || [];
+
+  for (const [fieldName, message] of requiredGenderFields) {
+    if (!form.elements[fieldName]?.value) {
+      form.insertAdjacentHTML("afterbegin", `<div class="form-error">${message}</div>`);
+      form.elements[fieldName].focus();
+      return false;
+    }
   }
 
   return true;
-}
-
-function fillSample(serviceKey, form) {
-  const samples = {
-    saju: {
-      nickname: "유성하",
-      birthDateYear: "1985",
-      birthDateMonth: "12",
-      birthDateDay: "2",
-      birthTime: "",
-      gender: "남성",
-      calendar: "양력",
-      question: "올해 가게를 하려고 하는데 괜찮을까?",
-    },
-    compatibility: { myName: "하린", myBirthDateYear: "1994", myBirthDateMonth: "6", myBirthDateDay: "8", theirName: "도윤", theirBirthDateYear: "1992", theirBirthDateMonth: "11", theirBirthDateDay: "21", relation: "연인" },
-    daily: { nickname: "수아", focus: "전체", mood: "차분함" },
-    naming: { surname: "김", purpose: "아기 이름", mood: "밝은", length: "2글자", avoid: "준" },
-  };
-
-  Object.entries(samples[serviceKey]).forEach(([key, value]) => {
-    const input = form.elements[key];
-    if (input) input.value = value;
-  });
 }
 
 function renderLoadingThenResult(serviceKey, formData) {
@@ -338,6 +363,7 @@ function makeRecentTitle(serviceKey, data) {
 
 function renderResult(serviceKey, formData) {
   const renderers = { saju: renderSajuResult, compatibility: renderCompatibilityResult, daily: renderDailyResult, naming: renderNamingResult };
+  $("#resultTitle").textContent = "프롬프트 생성 완료";
   $("#resultCard").innerHTML = renderers[serviceKey](formData);
   refreshIcons();
 }
