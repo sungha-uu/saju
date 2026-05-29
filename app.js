@@ -7,9 +7,26 @@ const services = {
       { name: "nickname", label: "이름 또는 별명", type: "text", placeholder: "예: 유성하" },
       { name: "birthDate", label: "생년월일", type: "dateGroup" },
       { name: "birthTime", label: "출생 시간", type: "time" },
-      { name: "gender", label: "성별", type: "select", options: ["선택 안 함", "남성", "여성"] },
+      {
+        name: "gender",
+        label: "성별",
+        type: "select",
+        required: true,
+        placeholder: "성별 선택",
+        options: [
+          { label: "남성", value: "남성" },
+          { label: "여성", value: "여성" },
+        ],
+      },
       { name: "calendar", label: "달력 기준", type: "select", options: ["양력", "음력"] },
       { name: "unknownTime", label: "출생 시간을 몰라요", type: "checkbox" },
+      {
+        name: "question",
+        label: "궁금한 점",
+        type: "textarea",
+        placeholder: "예: 올해 가게를 하려고 하는데 괜찮을까?",
+        full: true,
+      },
     ],
   },
   compatibility: {
@@ -170,6 +187,7 @@ function renderService(serviceKey) {
 
 function renderForm(serviceKey, fields) {
   const form = $("#fortuneForm");
+  form.noValidate = true;
   form.innerHTML = `
     <div class="field-grid">${fields.map((field) => renderField(field)).join("")}</div>
     <div class="form-actions">
@@ -180,6 +198,7 @@ function renderForm(serviceKey, fields) {
 
   form.onsubmit = (event) => {
     event.preventDefault();
+    if (!validateForm(serviceKey, form)) return;
     renderLoadingThenResult(serviceKey, Object.fromEntries(new FormData(form).entries()));
   };
 
@@ -188,11 +207,13 @@ function renderForm(serviceKey, fields) {
 
 function renderField(field) {
   if (field.type === "select") {
+    const options = field.options.map((option) => (typeof option === "string" ? { label: option, value: option } : option));
     return `
-      <div class="field">
+      <div class="field ${field.full ? "full" : ""}">
         <label for="${field.name}">${field.label}</label>
-        <select id="${field.name}" name="${field.name}">
-          ${field.options.map((option) => `<option value="${option}">${option}</option>`).join("")}
+        <select id="${field.name}" name="${field.name}" ${field.required ? "required" : ""}>
+          ${field.placeholder ? `<option value="" selected disabled>${field.placeholder}</option>` : ""}
+          ${options.map((option) => `<option value="${option.value}">${option.label}</option>`).join("")}
         </select>
       </div>
     `;
@@ -220,6 +241,15 @@ function renderField(field) {
     `;
   }
 
+  if (field.type === "textarea") {
+    return `
+      <div class="field ${field.full ? "full" : ""}">
+        <label for="${field.name}">${field.label}</label>
+        <textarea id="${field.name}" name="${field.name}" placeholder="${field.placeholder || ""}"></textarea>
+      </div>
+    `;
+  }
+
   return `
     <div class="field">
       <label for="${field.name}">${field.label}</label>
@@ -228,9 +258,31 @@ function renderField(field) {
   `;
 }
 
+function validateForm(serviceKey, form) {
+  const errorBox = form.querySelector(".form-error");
+  if (errorBox) errorBox.remove();
+
+  if (serviceKey === "saju" && !form.elements.gender?.value) {
+    form.insertAdjacentHTML("afterbegin", `<div class="form-error">사주팔자는 대운 순행/역행 계산 때문에 성별을 반드시 선택해야 합니다.</div>`);
+    form.elements.gender.focus();
+    return false;
+  }
+
+  return true;
+}
+
 function fillSample(serviceKey, form) {
   const samples = {
-    saju: { nickname: "유성하", birthDateYear: "1985", birthDateMonth: "12", birthDateDay: "2", birthTime: "", gender: "남성", calendar: "양력" },
+    saju: {
+      nickname: "유성하",
+      birthDateYear: "1985",
+      birthDateMonth: "12",
+      birthDateDay: "2",
+      birthTime: "",
+      gender: "남성",
+      calendar: "양력",
+      question: "올해 가게를 하려고 하는데 괜찮을까?",
+    },
     compatibility: { myName: "하린", myBirthDateYear: "1994", myBirthDateMonth: "6", myBirthDateDay: "8", theirName: "도윤", theirBirthDateYear: "1992", theirBirthDateMonth: "11", theirBirthDateDay: "21", relation: "연인" },
     daily: { nickname: "수아", focus: "전체", mood: "차분함" },
     naming: { surname: "김", purpose: "아기 이름", mood: "밝은", length: "2글자", avoid: "준" },
@@ -357,8 +409,9 @@ function analyzeSaju(data) {
       name: data.nickname || "사용자",
       birthDate: data.birthDate,
       birthTime: unknownTime ? "미상" : data.birthTime,
-      gender: data.gender || "선택 안 함",
+      gender: data.gender,
       calendar: data.calendar || "양력",
+      question: data.question?.trim() || "",
     },
     calendarDay: data.calendarDay,
     pillars,
@@ -496,20 +549,35 @@ function renderCareerMoneySection(analysis) {
 }
 
 function buildGptPrompt(analysis) {
-  return `아래 사주 계산 결과를 바탕으로 한국어 장문 사주풀이를 작성해줘.
+  return `너는 30년 경력의 명리학 상담가이자 사주풀이 전문가다.
+고전 명리의 용어를 이해하기 쉽게 풀어 쓰되, 아래에 제공된 계산값을 벗어나 새로운 만세력 값이나 없는 데이터를 만들어내면 안 된다.
 
-요구사항:
+작업 목표:
+아래 사주 계산 결과를 바탕으로 전문 상담 문서처럼 읽히는 한국어 장문 사주 리포트를 작성한다.
+사용자가 웹 GPT 결과를 HTML 파일로 내려받아 보관할 수 있도록, 최종 결과는 "완성된 단일 HTML 문서" 형태로 작성한다.
+
+출력 형식:
+- 가능한 경우 파일 다운로드가 가능한 HTML 문서로 제공한다.
+- 다운로드 기능이 없으면, 그대로 저장해 열 수 있는 완성형 HTML 전체 코드를 하나의 html 코드블록으로 제공한다.
+- HTML에는 <!doctype html>, html/head/body, 모바일 대응 CSS, 인쇄용 스타일을 포함한다.
+- 리포트 제목, 기본 정보 표, 핵심 요약 카드, 오행/십성 표, 대운 표, 세운 표, 상세 해석 섹션, 사용자의 질문에 대한 답변 섹션, 주의 문구를 포함한다.
+- 문서 톤은 너무 점집 말투가 아니라, 차분하고 신뢰감 있는 프리미엄 상담 리포트처럼 작성한다.
+- 각 섹션은 문단형으로 길게 작성하고, 표와 요약 박스를 섞어 읽기 쉽게 만든다.
+
+해석 규칙:
 - 계산값에 근거해서만 해석하고, 없는 데이터를 지어내지 말 것.
-- 출생시간이 미상이면 시주/자식운/말년운/세부 직업운은 불확실하다고 표시할 것.
-- 어린 시절, 성향, 건강/컨디션, 금전운, 직업운, 사업운, 배우자/관계운, 자식운, 대운/세운, 조심할 시기, 운이 트이는 시기를 길게 풀어쓸 것.
-- "겨울에 핀 꽃", "마른 땅에 내리는 비"처럼 사주 구조에 맞는 비유를 하나 만들되, 계산값과 연결할 것.
-- 질병 진단, 투자 확정, 합격/이직 보장처럼 단정적인 표현은 피하고 참고용으로 쓸 것.
+- 출생시간이 미상이면 시주/자식운/말년운/세부 직업운은 불확실하다고 명확히 표시할 것.
+- 어린 시절, 성향, 건강/컨디션, 금전운, 직업운, 사업운, 배우자/관계운, 자식운, 대운/세운, 조심할 시기, 운이 트이는 시기를 충분히 길게 풀어쓸 것.
+- 사용자가 별도 질문을 입력했다면, 사주 원국/대운/세운/운 신호에 근거해 별도 상담 답변을 작성할 것.
+- 질병 진단, 투자 확정, 합격/이직/사업 성공 보장처럼 단정적인 표현은 피하고 참고용으로 쓸 것.
+- 사주 용어를 쓸 때는 괄호나 짧은 문장으로 의미를 풀어 설명할 것.
 
 [입력]
 이름: ${analysis.input.name}
 생년월일: ${analysis.input.birthDate} (${analysis.input.calendar})
 출생시간: ${analysis.input.birthTime}
 성별: ${analysis.input.gender}
+궁금한 점: ${analysis.input.question || "없음"}
 
 [만세력]
 음력: ${analysis.calendarDay.lunar_year}-${analysis.calendarDay.lunar_month}-${analysis.calendarDay.lunar_day}
@@ -545,7 +613,11 @@ ${analysis.sewoon.map((year) => `${year.year}년(${year.age}세) ${year.pillar}:
 [운 신호]
 관운: ${analysis.luckSignals.official.level} - ${analysis.luckSignals.official.reason}
 재물운: ${analysis.luckSignals.wealth.level} - ${analysis.luckSignals.wealth.reason}
-이직운: ${analysis.luckSignals.change.level} - ${analysis.luckSignals.change.reason}`;
+이직운: ${analysis.luckSignals.change.level} - ${analysis.luckSignals.change.reason}
+
+[사용자 질문 답변 지시]
+${analysis.input.question ? `질문: ${analysis.input.question}
+이 질문에 대해 2026~2031년 세운, 현재 대운, 재물운/관운/이직운 신호를 연결해 별도 섹션으로 답변하라. 가능성, 유리한 조건, 조심할 조건, 실행 전 점검표를 포함하라.` : "사용자 질문이 없으므로 별도 질문 답변 섹션은 생략하거나 짧게 처리하라."}`;
 }
 
 function calculateHourPillar(dayStem, birthTime) {
