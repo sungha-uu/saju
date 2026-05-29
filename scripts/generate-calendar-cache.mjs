@@ -22,6 +22,7 @@ const args = parseArgs(process.argv.slice(2));
 const fromYear = Number(args.from || 1900);
 const toYear = Number(args.to || 2100);
 const outPath = args.out || "db/calendar-cache.sql";
+const skipSolarTerms = Boolean(args["skip-solar-terms"]);
 const serviceKey = await readServiceKey();
 
 if (!serviceKey) {
@@ -50,14 +51,19 @@ ON CONFLICT (id) DO UPDATE SET
 for (let year = fromYear; year <= toYear; year += 1) {
   console.log(`Fetching ${year} calendar data...`);
   const days = await fetchSolarYear(year);
+  if (days.length === 0) {
+    console.warn(`No calendar data returned for ${year}. Check API supported range.`);
+  }
   for (const day of days) {
     sql.push(calendarDaySql(day));
   }
 
-  console.log(`Fetching ${year} solar terms...`);
-  const terms = await fetchSolarTerms(year);
-  for (const term of terms) {
-    sql.push(solarTermSql(term, year));
+  if (!skipSolarTerms) {
+    console.log(`Fetching ${year} solar terms...`);
+    const terms = await fetchSolarTerms(year);
+    for (const term of terms) {
+      sql.push(solarTermSql(term, year));
+    }
   }
 }
 
@@ -74,7 +80,6 @@ async function fetchSolarYear(year) {
     url.searchParams.set("solMonth", String(month).padStart(2, "0"));
     url.searchParams.set("numOfRows", "40");
     url.searchParams.set("pageNo", "1");
-    url.searchParams.set("_type", "json");
 
     const data = await fetchJson(url);
     rows.push(...normalizeItems(data));
@@ -88,7 +93,6 @@ async function fetchSolarTerms(year) {
   url.searchParams.set("solYear", String(year));
   url.searchParams.set("numOfRows", "30");
   url.searchParams.set("pageNo", "1");
-  url.searchParams.set("_type", "json");
 
   const data = await fetchJson(url);
   return normalizeItems(data);
@@ -100,29 +104,38 @@ async function fetchJson(url) {
     throw new Error(`HTTP ${response.status}: ${redactServiceKey(url)}`);
   }
   const text = await response.text();
-  try {
-    return JSON.parse(text);
-  } catch (error) {
-    throw new Error(`Failed to parse JSON from ${redactServiceKey(url)}: ${text.slice(0, 300)}`);
+  if (text.includes("<resultCode>") && !text.includes("<resultCode>00</resultCode>")) {
+    throw new Error(`API error from ${redactServiceKey(url)}: ${text.slice(0, 300)}`);
   }
+  return parseXmlItems(text);
+}
+
+function parseXmlItems(xml) {
+  const matches = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)];
+  return matches.map((match) => {
+    const itemXml = match[1];
+    const item = {};
+    for (const field of [...itemXml.matchAll(/<([^/][^>]*)>([\s\S]*?)<\/\1>/g)]) {
+      item[field[1]] = decodeXml(field[2]);
+    }
+    return item;
+  });
 }
 
 function normalizeItems(data) {
-  const item = data?.response?.body?.items?.item;
-  if (!item) return [];
-  return Array.isArray(item) ? item : [item];
+  return data;
 }
 
 function calendarDaySql(row) {
   const date = `${row.solYear}-${pad(row.solMonth)}-${pad(row.solDay)}`;
-  const isLeapMonth = String(row.lunLeapmonth || "").trim() === "윤";
+  const isLeapMonth = String(row.lunLeapmonth || row.lunLeapMonth || "").trim() === "윤";
   const weekday = weekdayNumber(date);
 
   return `
 INSERT INTO calendar_days
   (date, solar_year, solar_month, solar_day, lunar_year, lunar_month, lunar_day, is_leap_month, year_ganji, month_ganji, day_ganji, julian_day, weekday, source_id, source_version)
 VALUES
-  ('${date}', ${num(row.solYear)}, ${num(row.solMonth)}, ${num(row.solDay)}, ${num(row.lunYear)}, ${num(row.lunMonth)}, ${num(row.lunDay)}, ${isLeapMonth}, '${escapeSql(row.gzYear)}', '${escapeSql(row.gzMonth)}', '${escapeSql(row.gzDay)}', ${nullableNum(row.julianDay)}, ${weekday}, 'kasi-calendar-api', '${escapeSql(`${fromYear}-${toYear}`)}')
+  ('${date}', ${num(row.solYear)}, ${num(row.solMonth)}, ${num(row.solDay)}, ${num(row.lunYear)}, ${num(row.lunMonth)}, ${num(row.lunDay)}, ${isLeapMonth}, '${escapeSql(row.lunSecha)}', '${escapeSql(row.lunWolgeon)}', '${escapeSql(row.lunIljin)}', ${nullableNum(row.solJd || row.julianDay)}, ${weekday}, 'kasi-calendar-api', '${escapeSql(`${fromYear}-${toYear}`)}')
 ON CONFLICT (date) DO UPDATE SET
   lunar_year = EXCLUDED.lunar_year,
   lunar_month = EXCLUDED.lunar_month,
@@ -139,7 +152,7 @@ ON CONFLICT (date) DO UPDATE SET
 }
 
 function solarTermSql(row, year) {
-  const dateText = String(row.locdate || row.solLocdate || "");
+  const dateText = String(row.locdate || row.solLocdate || row.locDate || "");
   const date = `${dateText.slice(0, 4)}-${dateText.slice(4, 6)}-${dateText.slice(6, 8)}`;
   const timeText = String(row.kst || row.sunLongitudeTime || "00:00").replace(/[^0-9]/g, "").padStart(4, "0");
   const time = `${timeText.slice(0, 2)}:${timeText.slice(2, 4)}:00+09`;
@@ -230,4 +243,13 @@ function weekdayNumber(date) {
 
 function escapeSql(value) {
   return String(value ?? "").replaceAll("'", "''");
+}
+
+function decodeXml(value) {
+  return String(value ?? "")
+    .replaceAll("&lt;", "<")
+    .replaceAll("&gt;", ">")
+    .replaceAll("&amp;", "&")
+    .replaceAll("&quot;", '"')
+    .replaceAll("&apos;", "'");
 }

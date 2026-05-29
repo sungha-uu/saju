@@ -63,7 +63,7 @@ scripts/generate-calendar-cache.mjs
 실행 예:
 
 ```bash
-DATA_GO_KR_SERVICE_KEY="발급받은_서비스키" node scripts/generate-calendar-cache.mjs --from 1900 --to 2100 --out db/calendar-cache.sql
+DATA_GO_KR_SERVICE_KEY="발급받은_서비스키" node scripts/generate-calendar-cache.mjs --from 1900 --to 2050 --out db/calendar-cache.sql --skip-solar-terms true
 ```
 
 생성 결과:
@@ -73,6 +73,8 @@ db/calendar-cache.sql
 ```
 
 이 파일은 `calendar_days`, `solar_terms`를 채우는 SQL이다.
+
+현재 생성된 `db/calendar-cache.sql`은 공공데이터포털 `한국천문연구원_음양력 정보` API로 만든 1900~2050년 `calendar_days` 캐시다. `한국천문연구원_특일 정보`의 24절기 API는 현재 403 응답이어서 `solar_terms`는 아직 포함하지 않았다.
 
 ## 4. 실제 운영 구조
 
@@ -101,4 +103,3 @@ GitHub Pages
 SQL 파일은 브라우저에서 읽지 않는다. 그래서 `db/seed.sql`을 추가해도 `app.js`가 그 데이터를 읽지 않으면 화면 결과는 바뀌지 않는다.
 
 이 문제를 줄이기 위해 현재는 `data/fortune-seed.js`를 추가했고, `app.js`가 이 데이터를 읽어 결과에 반영하도록 연결했다.
-
