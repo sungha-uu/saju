@@ -345,11 +345,15 @@ function renderSajuResult(data) {
   const birthInfo = getBirthInfo(data.birthDate);
   const samjae = getSamjaeInfo(birthInfo.year);
   const seed = getSajuSeed(data, birthInfo);
+  const dayMaster = getDayMaster(data.calendarDay?.day_ganji);
+  const yearPillar = data.calendarDay?.year_ganji || "조회 중";
+  const monthPillar = data.calendarDay?.month_ganji || "조회 중";
+  const dayPillar = data.calendarDay?.day_ganji || "조회 중";
 
   return `
     <div class="score-card">
       <p>${data.nickname || "사용자"}님의 종합 사주풀이</p>
-      <h4>${birthInfo.zodiac}띠 · 수 기운 중심</h4>
+      <h4>${birthInfo.zodiac}띠 · ${dayMaster.label}</h4>
     </div>
     ${seed.example ? resultSection(seed.example.metaphor, seed.example.summary) : ""}
     <div class="keyword-row">
@@ -360,9 +364,9 @@ function renderSajuResult(data) {
       <h4>사주 명식 목업</h4>
       <div class="pillar-grid">
         ${[
-          ["연주", "을해"],
-          ["월주", "기묘"],
-          ["일주", "임자"],
+          ["연주", formatGanjiShort(yearPillar)],
+          ["월주", formatGanjiShort(monthPillar)],
+          ["일주", formatGanjiShort(dayPillar)],
           ["시주", unknownTime ? "미상" : "정미"],
         ]
           .map(([label, value]) => `<div class="pillar"><b>${value}</b><span>${label}</span></div>`)
@@ -372,12 +376,12 @@ function renderSajuResult(data) {
     <div class="result-section">
       <h4>오행 밸런스</h4>
       <div class="element-bars">
-        ${renderElementBars({ 목: 64, 화: 42, 토: 58, 금: 24, 수: 78 })}
+        ${renderElementBars(getElementBars(dayMaster.element))}
       </div>
     </div>
     ${longSection("전체 총평", [
       `${seed.metaphor.title}로 비유할 수 있습니다. ${seed.metaphor.body}`,
-      "이 명식은 수 기운이 중심에 놓이고 목의 흐름이 이를 받아주는 형태로 읽을 수 있습니다. 사람과 상황을 단번에 밀어붙이기보다 먼저 분위기를 살피고, 속으로 여러 가능성을 비교한 뒤 움직이는 타입에 가깝습니다.",
+      `이 명식은 ${dayMaster.description} 입력한 날짜의 만세력 기준으로 연주는 ${yearPillar}, 월주는 ${monthPillar}, 일주는 ${dayPillar}입니다. 사람과 상황을 단번에 밀어붙이기보다 먼저 분위기를 살피고, 속으로 여러 가능성을 비교한 뒤 움직이는 타입에 가깝습니다.`,
       "장점은 감각, 관찰력, 적응력입니다. 반대로 약점은 생각이 너무 많아져 결정이 늦어지거나, 본인의 기준을 분명히 말하지 않아 주변 흐름에 끌려가는 점입니다. 운을 좋게 쓰려면 머릿속에 있는 감각을 문서, 숫자, 일정, 약속처럼 눈에 보이는 구조로 바꾸는 것이 중요합니다.",
     ])}
     ${longSection("오행 해석", [
@@ -469,6 +473,89 @@ function renderCalendarDataSection(day) {
     "만세력 DB 조회",
     `입력한 날짜의 DB 기준값입니다. 음력 ${day.lunar_year}년 ${day.lunar_month}월 ${day.lunar_day}일, 세차 ${day.year_ganji || "미상"}, 월건 ${day.month_ganji || "미상"}, 일진 ${day.day_ganji || "미상"}로 조회됐습니다.`,
   );
+}
+
+function formatGanjiShort(value) {
+  if (!value || value === "조회 중") return value;
+  return String(value).split("(")[0];
+}
+
+function getDayMaster(dayGanji = "") {
+  const stem = formatGanjiShort(dayGanji).charAt(0);
+  const stemMap = {
+    갑: {
+      label: "갑목 일간",
+      element: "wood",
+      description: "큰 나무처럼 기준을 세우고 위로 뻗는 목 기운을 중심으로 봅니다.",
+    },
+    을: {
+      label: "을목 일간",
+      element: "wood",
+      description: "꽃과 풀처럼 유연하게 살아남고 섬세하게 자라는 목 기운을 중심으로 봅니다.",
+    },
+    병: {
+      label: "병화 일간",
+      element: "fire",
+      description: "태양처럼 드러내고 밝히는 화 기운을 중심으로 봅니다.",
+    },
+    정: {
+      label: "정화 일간",
+      element: "fire",
+      description: "촛불처럼 한곳을 비추고 온기를 전하는 화 기운을 중심으로 봅니다.",
+    },
+    무: {
+      label: "무토 일간",
+      element: "earth",
+      description: "산처럼 버티고 중심을 잡는 토 기운을 중심으로 봅니다.",
+    },
+    기: {
+      label: "기토 일간",
+      element: "earth",
+      description: "밭처럼 받아들이고 길러내는 토 기운을 중심으로 봅니다.",
+    },
+    경: {
+      label: "경금 일간",
+      element: "metal",
+      description: "큰 쇠처럼 결단하고 다듬는 금 기운을 중심으로 봅니다.",
+    },
+    신: {
+      label: "신금 일간",
+      element: "metal",
+      description: "보석처럼 섬세한 기준과 완성도를 가진 금 기운을 중심으로 봅니다.",
+    },
+    임: {
+      label: "임수 일간",
+      element: "water",
+      description: "큰 강물처럼 넓게 흐르고 받아들이는 수 기운을 중심으로 봅니다.",
+    },
+    계: {
+      label: "계수 일간",
+      element: "water",
+      description: "비와 샘물처럼 조용히 스며드는 수 기운을 중심으로 봅니다.",
+    },
+  };
+
+  return (
+    stemMap[stem] || {
+      label: "만세력 조회",
+      element: "water",
+      description: "입력한 날짜의 만세력 데이터를 기준으로 풀이합니다.",
+    }
+  );
+}
+
+function getElementBars(dayElement) {
+  const base = { 목: 42, 화: 42, 토: 42, 금: 42, 수: 42 };
+  const boost = {
+    wood: "목",
+    fire: "화",
+    earth: "토",
+    metal: "금",
+    water: "수",
+  }[dayElement];
+
+  if (boost) base[boost] = 78;
+  return base;
 }
 
 async function fetchCalendarDay(date) {
