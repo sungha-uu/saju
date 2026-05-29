@@ -427,6 +427,13 @@ function renderSajuResult(data) {
   const prompt = buildGptPrompt(analysis);
 
   return `
+    <div class="result-section">
+      <div class="prompt-head">
+        <h4>웹 GPT 붙여넣기용 프롬프트</h4>
+        <button class="ghost-button compact" type="button" data-action="copy-prompt"><i data-lucide="copy"></i>프롬프트 복사</button>
+      </div>
+      <textarea id="gptPrompt" class="prompt-box" readonly>${escapeHtml(prompt)}</textarea>
+    </div>
     <div class="score-card">
       <p>${escapeHtml(analysis.input.name)}님의 계산 기반 사주 리포트</p>
       <h4>${analysis.dayMaster.stem}일간 · ${analysis.dayMaster.element} 기운</h4>
@@ -442,13 +449,6 @@ function renderSajuResult(data) {
     ${renderDaewoonSection(analysis)}
     ${renderSewoonSection(analysis)}
     ${renderCareerMoneySection(analysis)}
-    <div class="result-section">
-      <div class="prompt-head">
-        <h4>웹 GPT 붙여넣기용 프롬프트</h4>
-        <button class="ghost-button compact" type="button" data-action="copy-prompt"><i data-lucide="copy"></i>프롬프트 복사</button>
-      </div>
-      <textarea id="gptPrompt" class="prompt-box" readonly>${escapeHtml(prompt)}</textarea>
-    </div>
     ${disclaimer("이 화면은 정적 문구 풀이가 아니라 만세력/명리 계산값을 정리한 결과입니다. 다만 출생시간이 없거나 24절기 시각 데이터가 부족한 경우에는 해당 항목을 추정하지 않고 제한 사항으로 표시합니다.")}
   `;
 }
