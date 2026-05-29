@@ -351,7 +351,7 @@ button {
 }
 
 .date-inputs input:first-child {
-  text-align: left;
+  text-align: center;
 }
 
 .result-area[hidden] {
