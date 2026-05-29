@@ -372,6 +372,10 @@ function renderLoadingThenResult(serviceKey, formData) {
 async function renderResultWithData(serviceKey, formData) {
   const enrichedData = { ...formData };
   if (serviceKey === "saju" && formData.birthDate) enrichedData.calendarDay = await fetchCalendarDay(formData.birthDate, formData.calendar);
+  if (serviceKey === "compatibility") {
+    if (formData.myBirthDate) enrichedData.myCalendarDay = await fetchCalendarDay(formData.myBirthDate, formData.myCalendar);
+    if (formData.theirBirthDate) enrichedData.theirCalendarDay = await fetchCalendarDay(formData.theirBirthDate, formData.theirCalendar);
+  }
   if (serviceKey === "daily" && formData.dailyBirthDate) {
     enrichedData.calendarDay = await fetchCalendarDay(formData.dailyBirthDate, formData.dailyCalendar);
     enrichedData.todayCalendarDay = await fetchCalendarDay(formatDate(new Date()), "양력");
@@ -616,15 +620,8 @@ function buildGptPrompt(analysis) {
 
 작업 목표:
 아래 사주 계산 결과를 바탕으로 전문 상담 문서처럼 읽히는 한국어 장문 사주 리포트를 작성한다.
-사용자가 웹 GPT 결과를 HTML 파일로 내려받아 보관할 수 있도록, 최종 결과는 "완성된 단일 HTML 문서" 형태로 작성한다.
 
-출력 형식:
-- 가능한 경우 파일 다운로드가 가능한 HTML 문서로 제공한다.
-- 다운로드 기능이 없으면, 그대로 저장해 열 수 있는 완성형 HTML 전체 코드를 하나의 html 코드블록으로 제공한다.
-- HTML에는 <!doctype html>, html/head/body, 모바일 대응 CSS, 인쇄용 스타일을 포함한다.
-- 리포트 제목, 기본 정보 표, 핵심 요약 카드, 오행/십성 표, 대운 표, 세운 표, 상세 해석 섹션, 사용자의 질문에 대한 답변 섹션, 주의 문구를 포함한다.
-- 문서 톤은 너무 점집 말투가 아니라, 차분하고 신뢰감 있는 프리미엄 상담 리포트처럼 작성한다.
-- 각 섹션은 문단형으로 길게 작성하고, 표와 요약 박스를 섞어 읽기 쉽게 만든다.
+${buildReportOutputInstructions("사주 리포트")}
 
 해석 규칙:
 - 계산값에 근거해서만 해석하고, 없는 데이터를 지어내지 말 것.
@@ -1041,12 +1038,61 @@ function positiveModulo(value, divisor) {
 }
 
 function renderCompatibilityResult(data) {
+  const prompt = buildCompatibilityPrompt(data);
   return `
-    <div class="score-card"><p>${data.relation || "관계"} 궁합 점수</p><h4>82점</h4></div>
-    <div class="keyword-row">${["대화의 리듬", "서로 다른 속도", "조율 필요"].map((keyword) => `<span class="tag">${keyword}</span>`).join("")}</div>
-    ${resultSection("궁합 초안", `${data.myName || "나"}와 ${data.theirName || "상대"}의 생년월일 기반 궁합 계산은 다음 단계에서 사주 계산 엔진을 양쪽에 적용해 확장합니다.`)}
-    ${disclaimer()}
+    <div class="score-card"><p>${data.myName || "나"} × ${data.theirName || "상대"} 궁합</p><h4>궁합 프롬프트</h4></div>
+    <div class="keyword-row">
+      ${[data.relation || "관계", data.question ? "질문 포함" : "일반 궁합", data.myCalendarDay && data.theirCalendarDay ? "만세력 포함" : "입력 기반"].map((keyword) => `<span class="tag">${keyword}</span>`).join("")}
+    </div>
+    ${resultSection("궁합 프롬프트 안내", "두 사람의 입력 정보와 조회 가능한 만세력 값을 바탕으로 웹 GPT에 붙여넣을 궁합 리포트 프롬프트를 생성했습니다.")}
+    <div class="result-section">
+      <div class="prompt-head">
+        <h4>웹 GPT 붙여넣기용 프롬프트</h4>
+        <button class="ghost-button compact" type="button" data-action="copy-prompt"><i data-lucide="copy"></i>프롬프트 복사</button>
+      </div>
+      <textarea id="gptPrompt" class="prompt-box" readonly>${escapeHtml(prompt)}</textarea>
+    </div>
+    ${disclaimer("궁합 결과는 참고용입니다. 출생시간이 없거나 한쪽 만세력 조회가 실패한 경우에는 해당 한계를 명확히 표시하도록 프롬프트에 포함했습니다.")}
   `;
+}
+
+function buildCompatibilityPrompt(data) {
+  return `너는 30년 경력의 명리학 상담가이자 궁합 상담 전문가다.
+두 사람의 관계를 단정하거나 겁주는 방식이 아니라, 명리학적 신호를 바탕으로 관계의 강점, 충돌 지점, 조율 방법을 현실적으로 설명하라.
+
+작업 목표:
+아래 궁합 입력 정보를 바탕으로 전문 상담 문서처럼 읽히는 한국어 장문 궁합 리포트를 작성한다.
+
+${buildReportOutputInstructions("궁합 리포트")}
+
+해석 규칙:
+- 제공된 입력값과 만세력 값에 근거해서만 해석하고, 없는 사주값을 지어내지 말 것.
+- 출생시간이 미상인 경우 시주 기반 판단, 자식운, 말년운, 세부 결혼운은 불확실하다고 표시할 것.
+- 두 사람의 일간/일지, 오행 균형, 관계 유형, 대화 방식, 갈등 패턴, 장기 관계 가능성, 조율 팁을 충분히 길게 작성할 것.
+- 결혼/이별/재회/성공을 확정적으로 단정하지 말고 참고용으로 표현할 것.
+- 사용자가 궁금한 점을 입력했다면 별도 상담 답변 섹션에서 구체적으로 답할 것.
+
+[관계 입력]
+관계 유형: ${data.relation || "미입력"}
+궁금한 점: ${data.question?.trim() || "없음"}
+
+[나의 정보]
+이름: ${data.myName || "나"}
+생년월일: ${data.myBirthDate || "미입력"} (${data.myCalendar || "양력"})
+출생시간: ${data.myUnknownTime === "true" || !data.myBirthTime ? "미상" : data.myBirthTime}
+성별: ${data.myGender || "미입력"}
+만세력: ${formatCalendarSummary(data.myCalendarDay)}
+
+[상대방 정보]
+이름: ${data.theirName || "상대"}
+생년월일: ${data.theirBirthDate || "미입력"} (${data.theirCalendar || "양력"})
+출생시간: ${data.theirUnknownTime === "true" || !data.theirBirthTime ? "미상" : data.theirBirthTime}
+성별: ${data.theirGender || "미입력"}
+만세력: ${formatCalendarSummary(data.theirCalendarDay)}
+
+[사용자 질문 답변 지시]
+${data.question?.trim() ? `질문: ${data.question.trim()}
+이 질문에 대해 두 사람의 관계 흐름, 갈등 가능성, 조율 방법, 결정 전 체크리스트를 별도 섹션으로 작성하라.` : "사용자 질문이 없으므로 질문 답변 섹션은 생략하거나 짧게 처리하라."}`;
 }
 
 function renderDailyResult(data) {
@@ -1082,9 +1128,10 @@ function buildDailyPrompt(data, hasPreciseInput) {
   const common = `너는 명리학과 생활 상담에 능한 오늘의 운세 전문가다.
 아래 입력값을 바탕으로 한국어 오늘의 운세 리포트를 작성하라.
 
-출력 형식:
-- 결과는 전문 리포트처럼 제목, 요약 카드, 분야별 운세, 주의할 점, 오늘의 행동 가이드, 사용자 질문 답변으로 구성한다.
-- 가능한 경우 저장 가능한 단일 HTML 문서 형태로 출력한다.
+${buildReportOutputInstructions("오늘의 운세 리포트")}
+
+해석 규칙:
+- 결과는 제목, 요약 카드, 분야별 운세, 주의할 점, 오늘의 행동 가이드, 사용자 질문 답변으로 구성한다.
 - 단정적인 예언, 투자/계약/건강 결과 보장, 질병 진단은 피하고 참고용으로 표현한다.
 
 [공통 입력]
@@ -1135,6 +1182,41 @@ function buildDailyPrompt(data, hasPreciseInput) {
 function getDayMasterFromCalendar(day) {
   const pillar = parsePillar(day?.day_ganji);
   return stemInfo(pillar.stem);
+}
+
+function buildReportOutputInstructions(reportType) {
+  const fileName = getReportFileName();
+  return `출력 형식:
+1. 먼저 웹 GPT 답변 창에 사용자가 바로 읽을 수 있는 ${reportType}를 일반 답변 형태로 작성한다.
+   - HTML 코드부터 보여주지 말 것.
+   - 제목, 핵심 요약, 표, 상세 해석, 조언, 주의 문구를 보기 좋게 구성한다.
+2. 일반 답변을 모두 작성한 뒤, 같은 내용을 담은 HTML 문서를 별도 파일로 생성한다.
+   - 파일명은 반드시 ${fileName} 으로 한다.
+   - 파일 생성/첨부 기능을 사용할 수 있으면 다운로드 가능한 파일로 제공한다.
+   - 파일 생성 기능이 없다면 답변 맨 마지막에만 완성형 HTML 전체 코드를 하나의 html 코드블록으로 제공한다.
+3. HTML 문서에는 <!doctype html>, html/head/body, 모바일 대응 CSS, 인쇄용 스타일을 포함한다.
+4. HTML 문서는 일반 답변과 동일한 해석 내용을 담되, 보관/인쇄하기 좋은 리포트 레이아웃으로 만든다.`;
+}
+
+function getReportFileName() {
+  return `saju_report_${formatTimestamp(new Date())}.html`;
+}
+
+function formatTimestamp(date) {
+  const pad = (value) => String(value).padStart(2, "0");
+  return [
+    date.getFullYear(),
+    pad(date.getMonth() + 1),
+    pad(date.getDate()),
+    pad(date.getHours()),
+    pad(date.getMinutes()),
+    pad(date.getSeconds()),
+  ].join("");
+}
+
+function formatCalendarSummary(day) {
+  if (!day) return "만세력 조회값 없음";
+  return `음력 ${day.lunar_year}-${day.lunar_month}-${day.lunar_day}, 연주 ${day.year_ganji || "미상"}, 월주 ${day.month_ganji || "미상"}, 일주 ${day.day_ganji || "미상"}`;
 }
 
 function renderNamingResult(data) {
