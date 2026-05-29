@@ -262,7 +262,7 @@ button {
 
 .work-grid {
   display: grid;
-  grid-template-columns: minmax(0, 0.95fr) minmax(300px, 1.05fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 0;
 }
 
@@ -272,7 +272,7 @@ button {
 }
 
 .input-area {
-  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
 }
 
 .section-head {
@@ -734,7 +734,6 @@ button {
   }
 
   .input-area {
-    border-right: 0;
     border-bottom: 1px solid var(--line);
   }
 
