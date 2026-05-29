@@ -23,6 +23,7 @@ const fromYear = Number(args.from || 1900);
 const toYear = Number(args.to || 2100);
 const outPath = args.out || "db/calendar-cache.sql";
 const skipSolarTerms = Boolean(args["skip-solar-terms"]);
+const onlySolarTerms = Boolean(args["only-solar-terms"]);
 const serviceKey = await readServiceKey();
 
 if (!serviceKey) {
@@ -49,13 +50,15 @@ ON CONFLICT (id) DO UPDATE SET
 `);
 
 for (let year = fromYear; year <= toYear; year += 1) {
-  console.log(`Fetching ${year} calendar data...`);
-  const days = await fetchSolarYear(year);
-  if (days.length === 0) {
-    console.warn(`No calendar data returned for ${year}. Check API supported range.`);
-  }
-  for (const day of days) {
-    sql.push(calendarDaySql(day));
+  if (!onlySolarTerms) {
+    console.log(`Fetching ${year} calendar data...`);
+    const days = await fetchSolarYear(year);
+    if (days.length === 0) {
+      console.warn(`No calendar data returned for ${year}. Check API supported range.`);
+    }
+    for (const day of days) {
+      sql.push(calendarDaySql(day));
+    }
   }
 
   if (!skipSolarTerms) {

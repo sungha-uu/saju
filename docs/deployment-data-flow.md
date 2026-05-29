@@ -64,6 +64,7 @@ scripts/generate-calendar-cache.mjs
 
 ```bash
 DATA_GO_KR_SERVICE_KEY="발급받은_서비스키" node scripts/generate-calendar-cache.mjs --from 1900 --to 2050 --out db/calendar-cache.sql --skip-solar-terms true
+DATA_GO_KR_SERVICE_KEY="발급받은_서비스키" node scripts/generate-calendar-cache.mjs --from 2003 --to 2027 --out db/solar-terms-cache.sql --only-solar-terms true
 ```
 
 생성 결과:
@@ -74,7 +75,9 @@ db/calendar-cache.sql
 
 이 파일은 `calendar_days`, `solar_terms`를 채우는 SQL이다.
 
-현재 생성된 `db/calendar-cache.sql`은 공공데이터포털 `한국천문연구원_음양력 정보` API로 만든 1900~2050년 `calendar_days` 캐시다. `한국천문연구원_특일 정보`의 24절기 API는 현재 403 응답이어서 `solar_terms`는 아직 포함하지 않았다.
+현재 생성된 `db/calendar-cache.sql`은 공공데이터포털 `한국천문연구원_음양력 정보` API로 만든 1900~2050년 `calendar_days` 캐시다.
+
+현재 생성된 `db/solar-terms-cache.sql`은 공공데이터포털 `한국천문연구원_특일 정보` API로 만든 2003~2027년 `solar_terms` 캐시다. 특일 API는 1985년과 2030년 이후 요청에서 빈 응답을 반환하므로, 제공되는 범위만 캐시했다.
 
 ## 4. 실제 운영 구조
 
