@@ -15,28 +15,28 @@ GitHub Pages에서 바로 반영되는 파일은 브라우저가 읽는 정적 �
 - `index.html`
 - `styles.css`
 - `app.js`
-- `data/fortune-seed.js`
 - `data/calendar/*.json`
 
 ## 2. 현재 구조
 
 현재 앱은 두 종류의 데이터를 가진다.
 
-### 2.1 정적 화면용 데이터
+### 2.1 정적 만세력 데이터와 브라우저 계산 엔진
 
 파일:
 
 ```txt
-data/fortune-seed.js
+app.js
 data/calendar/1900.json ... data/calendar/2050.json
 ```
 
 용도:
 
 - GitHub Pages 화면에서 바로 사용
-- 계절 비유, 관운, 재물운, 이직운 문구를 프론트에서 표시
-- 예: 1985-12-02 입력 시 유성하 예시 풀이가 더 구체적으로 표시됨
 - 입력한 생년월일의 음력, 세차, 월건, 일진을 정적 만세력 JSON에서 조회
+- 출생시간이 있으면 시주를 계산
+- 오행 점수, 십성, 지장간, 격국 후보, 용신/희신/기신 후보, 대운/세운 신호를 브라우저에서 계산
+- AI API 없이도 웹 GPT에 붙여넣을 수 있는 표준 프롬프트를 생성
 
 ### 2.2 실제 DB용 데이터
 
@@ -90,7 +90,6 @@ db/calendar-cache.sql
 GitHub Pages
   -> index.html
   -> app.js
-  -> data/fortune-seed.js
   -> data/calendar/{year}.json
 ```
 
@@ -109,4 +108,4 @@ GitHub Pages
 
 SQL 파일은 브라우저에서 읽지 않는다. 그래서 `db/seed.sql`을 추가해도 `app.js`가 그 데이터를 읽지 않으면 화면 결과는 바뀌지 않는다.
 
-이 문제를 줄이기 위해 현재는 `data/fortune-seed.js`와 `data/calendar/*.json`을 추가했고, `app.js`가 이 데이터를 읽어 결과에 반영하도록 연결했다. 따라서 GitHub Pages에서도 1900~2050년 생년월일은 음력/세차/월건/일진을 조회할 수 있다.
+현재는 `data/calendar/*.json`을 추가했고, `app.js`가 이 데이터를 읽어 명리 계산값을 만든다. 따라서 GitHub Pages에서도 1900~2050년 생년월일은 음력/세차/월건/일진을 조회하고, 그 값을 기반으로 사주 계산 리포트와 GPT 프롬프트를 생성할 수 있다.

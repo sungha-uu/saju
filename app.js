@@ -2,21 +2,13 @@ const services = {
   saju: {
     eyebrow: "SAJU READING",
     title: "사주팔자",
-    description: "생년월일시를 바탕으로 명식과 오행 흐름을 가볍게 살펴봅니다.",
+    description: "만세력 데이터와 명리 계산값을 바탕으로 사주 구조를 분석합니다.",
     fields: [
-      { name: "nickname", label: "이름 또는 별명", type: "text", placeholder: "예: 민지" },
-      {
-        name: "birthDate",
-        label: "생년월일",
-        type: "dateGroup",
-      },
+      { name: "nickname", label: "이름 또는 별명", type: "text", placeholder: "예: 유성하" },
+      { name: "birthDate", label: "생년월일", type: "dateGroup" },
       { name: "birthTime", label: "출생 시간", type: "time" },
-      {
-        name: "calendar",
-        label: "달력 기준",
-        type: "select",
-        options: ["양력", "음력"],
-      },
+      { name: "gender", label: "성별", type: "select", options: ["선택 안 함", "남성", "여성"] },
+      { name: "calendar", label: "달력 기준", type: "select", options: ["양력", "음력"] },
       { name: "unknownTime", label: "출생 시간을 몰라요", type: "checkbox" },
     ],
   },
@@ -26,23 +18,10 @@ const services = {
     description: "두 사람의 기본 흐름을 비교해 끌림과 조율 포인트를 확인합니다.",
     fields: [
       { name: "myName", label: "나의 이름", type: "text", placeholder: "예: 하린" },
-      {
-        name: "myBirthDate",
-        label: "나의 생년월일",
-        type: "dateGroup",
-      },
+      { name: "myBirthDate", label: "나의 생년월일", type: "dateGroup" },
       { name: "theirName", label: "상대 이름", type: "text", placeholder: "예: 도윤" },
-      {
-        name: "theirBirthDate",
-        label: "상대 생년월일",
-        type: "dateGroup",
-      },
-      {
-        name: "relation",
-        label: "관계 유형",
-        type: "select",
-        options: ["연인", "썸", "친구", "동료", "가족"],
-      },
+      { name: "theirBirthDate", label: "상대 생년월일", type: "dateGroup" },
+      { name: "relation", label: "관계 유형", type: "select", options: ["연인", "썸", "친구", "동료", "가족"] },
     ],
   },
   daily: {
@@ -51,18 +30,8 @@ const services = {
     description: "오늘의 기분, 일, 관계 흐름을 짧고 산뜻한 카드로 확인합니다.",
     fields: [
       { name: "nickname", label: "별명", type: "text", placeholder: "예: 수아" },
-      {
-        name: "focus",
-        label: "관심 분야",
-        type: "select",
-        options: ["전체", "연애", "일", "돈", "인간관계", "컨디션"],
-      },
-      {
-        name: "mood",
-        label: "오늘의 기분",
-        type: "select",
-        options: ["차분함", "들뜸", "피곤함", "집중됨", "복잡함"],
-      },
+      { name: "focus", label: "관심 분야", type: "select", options: ["전체", "연애", "일", "돈", "인간관계", "컨디션"] },
+      { name: "mood", label: "오늘의 기분", type: "select", options: ["차분함", "들뜸", "피곤함", "집중됨", "복잡함"] },
     ],
   },
   naming: {
@@ -71,24 +40,9 @@ const services = {
     description: "성씨와 원하는 이미지를 바탕으로 이름 후보와 느낌을 제안합니다.",
     fields: [
       { name: "surname", label: "성씨", type: "text", placeholder: "예: 김" },
-      {
-        name: "purpose",
-        label: "용도",
-        type: "select",
-        options: ["아기 이름", "개명 아이디어", "예명", "닉네임", "브랜드명"],
-      },
-      {
-        name: "mood",
-        label: "원하는 느낌",
-        type: "select",
-        options: ["밝은", "단정한", "지적인", "부드러운", "현대적인", "고전적인"],
-      },
-      {
-        name: "length",
-        label: "이름 글자 수",
-        type: "select",
-        options: ["2글자", "3글자"],
-      },
+      { name: "purpose", label: "용도", type: "select", options: ["아기 이름", "개명 아이디어", "예명", "닉네임", "브랜드명"] },
+      { name: "mood", label: "원하는 느낌", type: "select", options: ["밝은", "단정한", "지적인", "부드러운", "현대적인", "고전적인"] },
+      { name: "length", label: "이름 글자 수", type: "select", options: ["2글자", "3글자"] },
       { name: "avoid", label: "피하고 싶은 글자", type: "text", placeholder: "예: 민, 준" },
     ],
   },
@@ -102,6 +56,68 @@ const state = {
   ],
 };
 
+const stems = [
+  ["갑", "목", "양"],
+  ["을", "목", "음"],
+  ["병", "화", "양"],
+  ["정", "화", "음"],
+  ["무", "토", "양"],
+  ["기", "토", "음"],
+  ["경", "금", "양"],
+  ["신", "금", "음"],
+  ["임", "수", "양"],
+  ["계", "수", "음"],
+];
+
+const branches = [
+  ["자", "수", "양", ["계"]],
+  ["축", "토", "음", ["기", "계", "신"]],
+  ["인", "목", "양", ["갑", "병", "무"]],
+  ["묘", "목", "음", ["을"]],
+  ["진", "토", "양", ["무", "을", "계"]],
+  ["사", "화", "음", ["병", "경", "무"]],
+  ["오", "화", "양", ["정", "기"]],
+  ["미", "토", "음", ["기", "정", "을"]],
+  ["신", "금", "양", ["경", "임", "무"]],
+  ["유", "금", "음", ["신"]],
+  ["술", "토", "양", ["무", "신", "정"]],
+  ["해", "수", "음", ["임", "갑"]],
+];
+
+const elementOrder = ["목", "화", "토", "금", "수"];
+const elementLabels = { 목: "목", 화: "화", 토: "토", 금: "금", 수: "수" };
+const elementFeeds = { 목: "화", 화: "토", 토: "금", 금: "수", 수: "목" };
+const elementControls = { 목: "토", 토: "수", 수: "화", 화: "금", 금: "목" };
+const animals = ["쥐", "소", "호랑이", "토끼", "용", "뱀", "말", "양", "원숭이", "닭", "개", "돼지"];
+const branchClashes = { 자: "오", 축: "미", 인: "신", 묘: "유", 진: "술", 사: "해", 오: "자", 미: "축", 신: "인", 유: "묘", 술: "진", 해: "사" };
+const solarTerms = [
+  ["소한", 1, "jie"],
+  ["대한", 1, "zhong"],
+  ["입춘", 2, "jie"],
+  ["우수", 2, "zhong"],
+  ["경칩", 3, "jie"],
+  ["춘분", 3, "zhong"],
+  ["청명", 4, "jie"],
+  ["곡우", 4, "zhong"],
+  ["입하", 5, "jie"],
+  ["소만", 5, "zhong"],
+  ["망종", 6, "jie"],
+  ["하지", 6, "zhong"],
+  ["소서", 7, "jie"],
+  ["대서", 7, "zhong"],
+  ["입추", 8, "jie"],
+  ["처서", 8, "zhong"],
+  ["백로", 9, "jie"],
+  ["추분", 9, "zhong"],
+  ["한로", 10, "jie"],
+  ["상강", 10, "zhong"],
+  ["입동", 11, "jie"],
+  ["소설", 11, "zhong"],
+  ["대설", 12, "jie"],
+  ["동지", 12, "zhong"],
+];
+const solarTermConstants20 = [6.11, 20.84, 4.6295, 19.4599, 6.3826, 21.4155, 5.59, 20.888, 6.318, 21.86, 6.5, 22.2, 7.928, 23.65, 8.35, 23.95, 8.44, 23.822, 9.098, 24.218, 8.218, 23.08, 7.9, 22.6];
+const solarTermConstants21 = [5.4055, 20.12, 3.87, 18.74, 5.63, 20.646, 4.81, 20.1, 5.52, 21.04, 5.678, 21.37, 7.108, 22.83, 7.5, 23.13, 7.646, 23.042, 8.318, 23.438, 7.438, 22.36, 7.18, 21.94];
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 
@@ -114,24 +130,25 @@ function init() {
 }
 
 function setToday() {
-  const formatter = new Intl.DateTimeFormat("ko-KR", {
+  $("#todayLabel").textContent = new Intl.DateTimeFormat("ko-KR", {
     month: "long",
     day: "numeric",
     weekday: "long",
-  });
-  $("#todayLabel").textContent = formatter.format(new Date());
+  }).format(new Date());
 }
 
 function bindEvents() {
-  $$(".service-tab").forEach((button) => {
-    button.addEventListener("click", () => renderService(button.dataset.service));
-  });
-
+  $$(".service-tab").forEach((button) => button.addEventListener("click", () => renderService(button.dataset.service)));
   $("[data-action='quick-daily']").addEventListener("click", () => renderService("daily"));
   $("[data-action='reset-form']").addEventListener("click", () => renderService(state.activeService));
-
-  $(".favorite-button").addEventListener("click", (event) => {
-    event.currentTarget.classList.toggle("active");
+  $(".favorite-button").addEventListener("click", (event) => event.currentTarget.classList.toggle("active"));
+  document.addEventListener("click", async (event) => {
+    const button = event.target.closest("[data-action='copy-prompt']");
+    if (!button) return;
+    const prompt = $("#gptPrompt")?.value || "";
+    await navigator.clipboard?.writeText(prompt);
+    button.innerHTML = `<i data-lucide="check"></i> 복사됨`;
+    refreshIcons();
   });
 }
 
@@ -139,10 +156,7 @@ function renderService(serviceKey) {
   state.activeService = serviceKey;
   const service = services[serviceKey];
 
-  $$(".service-tab").forEach((button) => {
-    button.classList.toggle("active", button.dataset.service === serviceKey);
-  });
-
+  $$(".service-tab").forEach((button) => button.classList.toggle("active", button.dataset.service === serviceKey));
   $("#serviceEyebrow").textContent = service.eyebrow;
   $("#serviceTitle").textContent = service.title;
   $("#serviceDescription").textContent = service.description;
@@ -157,30 +171,19 @@ function renderService(serviceKey) {
 function renderForm(serviceKey, fields) {
   const form = $("#fortuneForm");
   form.innerHTML = `
-    <div class="field-grid">
-      ${fields.map((field) => renderField(field)).join("")}
-    </div>
+    <div class="field-grid">${fields.map((field) => renderField(field)).join("")}</div>
     <div class="form-actions">
-      <button class="primary-button" type="submit">
-        <i data-lucide="wand-sparkles"></i>
-        결과 보기
-      </button>
-      <button class="ghost-button" type="button" data-action="sample-fill">
-        <i data-lucide="pen-line"></i>
-        샘플 입력
-      </button>
+      <button class="primary-button" type="submit"><i data-lucide="wand-sparkles"></i>결과 보기</button>
+      <button class="ghost-button" type="button" data-action="sample-fill"><i data-lucide="pen-line"></i>샘플 입력</button>
     </div>
   `;
 
   form.onsubmit = (event) => {
     event.preventDefault();
-    const formData = Object.fromEntries(new FormData(form).entries());
-    renderLoadingThenResult(serviceKey, formData);
+    renderLoadingThenResult(serviceKey, Object.fromEntries(new FormData(form).entries()));
   };
 
-  form.querySelector("[data-action='sample-fill']").addEventListener("click", () => {
-    fillSample(serviceKey, form);
-  });
+  form.querySelector("[data-action='sample-fill']").addEventListener("click", () => fillSample(serviceKey, form));
 }
 
 function renderField(field) {
@@ -220,39 +223,15 @@ function renderField(field) {
   return `
     <div class="field">
       <label for="${field.name}">${field.label}</label>
-      <input
-        id="${field.name}"
-        name="${field.name}"
-        type="${field.type}"
-        placeholder="${field.placeholder || ""}"
-        ${field.inputMode ? `inputmode="${field.inputMode}"` : ""}
-        ${field.inputMode === "numeric" ? 'autocomplete="bday"' : ""}
-      />
+      <input id="${field.name}" name="${field.name}" type="${field.type}" placeholder="${field.placeholder || ""}" />
     </div>
   `;
 }
 
 function fillSample(serviceKey, form) {
   const samples = {
-    saju: {
-      nickname: "민지",
-      birthDateYear: "1995",
-      birthDateMonth: "3",
-      birthDateDay: "12",
-      birthTime: "14:30",
-      calendar: "양력",
-    },
-    compatibility: {
-      myName: "하린",
-      myBirthDateYear: "1994",
-      myBirthDateMonth: "6",
-      myBirthDateDay: "8",
-      theirName: "도윤",
-      theirBirthDateYear: "1992",
-      theirBirthDateMonth: "11",
-      theirBirthDateDay: "21",
-      relation: "연인",
-    },
+    saju: { nickname: "유성하", birthDateYear: "1985", birthDateMonth: "12", birthDateDay: "2", birthTime: "", gender: "남성", calendar: "양력" },
+    compatibility: { myName: "하린", myBirthDateYear: "1994", myBirthDateMonth: "6", myBirthDateDay: "8", theirName: "도윤", theirBirthDateYear: "1992", theirBirthDateMonth: "11", theirBirthDateDay: "21", relation: "연인" },
     daily: { nickname: "수아", focus: "전체", mood: "차분함" },
     naming: { surname: "김", purpose: "아기 이름", mood: "밝은", length: "2글자", avoid: "준" },
   };
@@ -268,66 +247,47 @@ function renderLoadingThenResult(serviceKey, formData) {
   showResult();
   $("#resultCard").innerHTML = `
     <div class="result-section">
-      <h4>결과를 정리하는 중</h4>
-      <p>입력한 흐름을 바탕으로 보기 좋은 카드로 정리하고 있습니다.</p>
+      <h4>계산 중</h4>
+      <p>만세력 JSON을 조회하고 사주 계산값을 구성하고 있습니다.</p>
     </div>
   `;
 
-  window.setTimeout(() => {
-    renderResultWithData(serviceKey, normalizedData);
-    const service = services[serviceKey].title;
-    const title = makeRecentTitle(serviceKey, normalizedData);
-    state.recent.unshift({ service, title, time: "방금 전" });
+  window.setTimeout(async () => {
+    await renderResultWithData(serviceKey, normalizedData);
+    state.recent.unshift({ service: services[serviceKey].title, title: makeRecentTitle(serviceKey, normalizedData), time: "방금 전" });
     state.recent = state.recent.slice(0, 5);
     renderRecent();
-  }, 420);
+  }, 180);
 }
 
 async function renderResultWithData(serviceKey, formData) {
   const enrichedData = { ...formData };
-
-  if (serviceKey === "saju" && formData.birthDate) {
-    enrichedData.calendarDay = await fetchCalendarDay(formData.birthDate);
-  }
-
+  if (serviceKey === "saju" && formData.birthDate) enrichedData.calendarDay = await fetchCalendarDay(formData.birthDate, formData.calendar);
   renderResult(serviceKey, enrichedData);
 }
 
 function normalizeFormData(formData) {
   const normalized = { ...formData };
-
   ["birthDate", "myBirthDate", "theirBirthDate"].forEach((key) => {
-    const year = formData[`${key}Year`];
-    const month = formData[`${key}Month`];
-    const day = formData[`${key}Day`];
-
-    if (year || month || day) {
-      normalized[key] = [
-        String(year || "").padStart(4, "0"),
-        String(month || "").padStart(2, "0"),
-        String(day || "").padStart(2, "0"),
-      ].join("-");
-    }
+    const year = onlyNumber(formData[`${key}Year`]);
+    const month = onlyNumber(formData[`${key}Month`]);
+    const day = onlyNumber(formData[`${key}Day`]);
+    if (year || month || day) normalized[key] = [String(year).padStart(4, "0"), String(month).padStart(2, "0"), String(day).padStart(2, "0")].join("-");
   });
-
   return normalized;
 }
 
 function makeRecentTitle(serviceKey, data) {
   if (serviceKey === "compatibility") return `${data.myName || "나"} × ${data.theirName || "상대"}`;
-  if (serviceKey === "naming") return `${data.surname || "이"}로운 이름 후보`;
+  if (serviceKey === "naming") return `${data.surname || "새"}로운 이름 후보`;
   if (serviceKey === "daily") return `${data.focus || "전체"} 흐름`;
-  return `${data.nickname || "나"}의 명식`;
+  return `${data.nickname || "사용자"}의 명식`;
 }
 
 function renderResult(serviceKey, formData) {
-  const renderers = {
-    saju: renderSajuResult,
-    compatibility: renderCompatibilityResult,
-    daily: renderDailyResult,
-    naming: renderNamingResult,
-  };
+  const renderers = { saju: renderSajuResult, compatibility: renderCompatibilityResult, daily: renderDailyResult, naming: renderNamingResult };
   $("#resultCard").innerHTML = renderers[serviceKey](formData);
+  refreshIcons();
 }
 
 function hideResult() {
@@ -341,240 +301,524 @@ function showResult() {
 }
 
 function renderSajuResult(data) {
-  const unknownTime = data.unknownTime === "true";
-  const birthInfo = getBirthInfo(data.birthDate);
-  const samjae = getSamjaeInfo(birthInfo.year);
-  const seed = getSajuSeed(data, birthInfo);
-  const dayMaster = getDayMaster(data.calendarDay?.day_ganji);
-  const yearPillar = data.calendarDay?.year_ganji || "조회 중";
-  const monthPillar = data.calendarDay?.month_ganji || "조회 중";
-  const dayPillar = data.calendarDay?.day_ganji || "조회 중";
+  if (!data.calendarDay) {
+    return resultSection("만세력 조회 실패", "입력한 날짜의 만세력 데이터를 찾지 못했습니다. 현재 정적 JSON 범위는 1900~2050년 양력 기준입니다.");
+  }
+
+  const analysis = analyzeSaju(data);
+  const prompt = buildGptPrompt(analysis);
 
   return `
     <div class="score-card">
-      <p>${data.nickname || "사용자"}님의 종합 사주풀이</p>
-      <h4>${birthInfo.zodiac}띠 · ${dayMaster.label}</h4>
+      <p>${escapeHtml(analysis.input.name)}님의 계산 기반 사주 리포트</p>
+      <h4>${analysis.dayMaster.stem}일간 · ${analysis.dayMaster.element} 기운</h4>
     </div>
-    ${seed.example ? resultSection(seed.example.metaphor, seed.example.summary) : ""}
     <div class="keyword-row">
-      ${["수 기운 강함", "금 기운 보완", seed.metaphor.title, "관찰형 리더십"].map((keyword) => `<span class="tag">${keyword}</span>`).join("")}
+      ${analysis.keySignals.map((keyword) => `<span class="tag">${keyword}</span>`).join("")}
     </div>
-    ${data.calendarDay ? renderCalendarDataSection(data.calendarDay) : resultSection("만세력 조회 안내", "입력한 날짜가 정적 만세력 범위 밖에 있습니다. 현재 GitHub Pages에서는 1900~2050년 음양력/세차/월건/일진을 연도별 JSON으로 조회합니다.")}
+    ${renderPillarSection(analysis)}
+    ${renderElementSection(analysis)}
+    ${renderTenGodSection(analysis)}
+    ${renderHiddenStemSection(analysis)}
+    ${renderPatternSection(analysis)}
+    ${renderDaewoonSection(analysis)}
+    ${renderSewoonSection(analysis)}
+    ${renderCareerMoneySection(analysis)}
     <div class="result-section">
-      <h4>사주 명식 목업</h4>
-      <div class="pillar-grid">
-        ${[
-          ["연주", formatGanjiShort(yearPillar)],
-          ["월주", formatGanjiShort(monthPillar)],
-          ["일주", formatGanjiShort(dayPillar)],
-          ["시주", unknownTime ? "미상" : "정미"],
-        ]
-          .map(([label, value]) => `<div class="pillar"><b>${value}</b><span>${label}</span></div>`)
-          .join("")}
+      <div class="prompt-head">
+        <h4>웹 GPT 붙여넣기용 프롬프트</h4>
+        <button class="ghost-button compact" type="button" data-action="copy-prompt"><i data-lucide="copy"></i>프롬프트 복사</button>
       </div>
+      <textarea id="gptPrompt" class="prompt-box" readonly>${escapeHtml(prompt)}</textarea>
     </div>
-    <div class="result-section">
-      <h4>오행 밸런스</h4>
-      <div class="element-bars">
-        ${renderElementBars(getElementBars(dayMaster.element))}
-      </div>
-    </div>
-    ${longSection("전체 총평", [
-      `${seed.metaphor.title}로 비유할 수 있습니다. ${seed.metaphor.body}`,
-      `이 명식은 ${dayMaster.description} 입력한 날짜의 만세력 기준으로 연주는 ${yearPillar}, 월주는 ${monthPillar}, 일주는 ${dayPillar}입니다. 사람과 상황을 단번에 밀어붙이기보다 먼저 분위기를 살피고, 속으로 여러 가능성을 비교한 뒤 움직이는 타입에 가깝습니다.`,
-      "장점은 감각, 관찰력, 적응력입니다. 반대로 약점은 생각이 너무 많아져 결정이 늦어지거나, 본인의 기준을 분명히 말하지 않아 주변 흐름에 끌려가는 점입니다. 운을 좋게 쓰려면 머릿속에 있는 감각을 문서, 숫자, 일정, 약속처럼 눈에 보이는 구조로 바꾸는 것이 중요합니다.",
-    ])}
-    ${longSection("오행 해석", [
-      "수 기운은 지혜, 감정, 직관, 이동성, 생각의 깊이로 볼 수 있고, 목 기운은 성장, 기획, 배움, 표현으로 볼 수 있습니다. 이 둘이 살아 있으면 새로운 것을 배우고 연결하는 능력이 좋습니다. 다만 금 기운이 약한 흐름으로 보면 마무리, 규칙, 계약, 숫자 관리, 경계 설정은 의식적으로 보완해야 합니다.",
-      "쉽게 말하면 아이디어는 잘 떠오르는데 정리와 마감에서 에너지가 빠질 수 있습니다. 그래서 혼자 감으로 처리하기보다 체크리스트, 회계표, 계약서, 일정표를 곁에 두면 운의 흐름이 훨씬 안정됩니다. 금 기운을 보완하는 행동은 곧 생활의 기준을 세우는 일입니다.",
-    ])}
-    ${longSection("어린 시절과 성장운", [
-      "어린 시절에는 주변의 말투, 표정, 분위기를 예민하게 받아들이는 편으로 볼 수 있습니다. 겉으로는 괜찮아 보여도 속으로는 오래 생각하고, 혼자 납득해야 마음이 편해지는 흐름입니다. 그래서 어릴 때부터 칭찬과 비교에 민감했을 가능성이 있습니다.",
-      "초년운은 아주 강하게 치고 나가는 모습보다는 천천히 적응하며 실력을 쌓는 쪽에 가깝습니다. 초반에 눈에 띄지 않더라도, 관심 있는 분야를 오래 붙잡으면 뒤늦게 두각을 보이는 타입입니다. 어릴 때 형성된 자기 기준이 성인이 된 뒤 직업 선택과 인간관계 방식에 큰 영향을 줄 수 있습니다.",
-    ])}
-    ${longSection("청년기와 직업운", [
-      "20대 초중반은 방향을 하나로 고정하기보다 여러 선택지를 비교하는 시기입니다. 이때는 내가 뭘 좋아하는지보다, 어떤 환경에서 오래 버틸 수 있는지 확인하는 과정이 더 중요합니다. 처음 선택이 곧 평생의 답이라고 생각하면 오히려 운이 막히는 느낌을 받을 수 있습니다.",
-      "직업적으로는 기획, 분석, 교육, 상담, 콘텐츠, 브랜딩, 데이터 정리, 서비스 운영처럼 사람의 흐름과 정보를 함께 다루는 일이 잘 맞습니다. 단순 반복만 있는 일보다는 관찰하고 해석하고 개선하는 역할에서 장점이 살아납니다. 30대 이후에는 경험이 쌓이면서 말, 글, 기획, 관리 능력이 수입과 연결되기 쉬운 흐름입니다.",
-      seed.luckRules.officialWeak,
-    ])}
-    ${longSection("금전운", [
-      "재물운은 한 번에 크게 잡는 운보다 천천히 흐름을 만들고 지키는 쪽에 가깝습니다. 돈을 버는 감각 자체가 없는 사주는 아니지만, 감정이 흔들릴 때 소비나 결정도 같이 흔들릴 수 있습니다. 특히 인간관계, 기분 전환, 배움, 취향 소비 쪽으로 돈이 새기 쉽습니다.",
-      "재물운을 좋게 쓰려면 자동 저축, 월별 예산, 고정비 점검, 장기 목표처럼 구조를 먼저 만들어야 합니다. 이 명식은 돈을 쫓을 때보다 실력과 신뢰가 쌓인 뒤 돈이 따라오는 흐름이 더 좋습니다. 투자성 결정은 즉흥보다 기록과 비교가 맞고, 남의 말만 듣고 움직이는 방식은 피하는 편이 안정적입니다.",
-      seed.luckRules.wealthMiddle,
-    ])}
-    ${seed.example ? seed.example.sections.map((section) => resultSection(section.title, section.body)).join("") : ""}
-    ${longSection("사업운", [
-      "사업운은 있습니다. 다만 초반부터 크게 벌이는 방식보다는 작게 검증하고, 반복 고객을 만들고, 신뢰를 누적하는 방식이 맞습니다. 감각은 좋은데 운영 체계가 약하면 수익이 생겨도 새는 구멍이 생길 수 있으니, 가격표, 계약 조건, 정산 기준을 분명히 해야 합니다.",
-      "잘 맞는 사업 방향은 콘텐츠, 교육, 상담, 취향 기반 브랜드, 데이터/리서치, 라이프스타일 서비스처럼 사람의 마음과 정보를 함께 읽는 분야입니다. 동업은 가능하지만 역할 분리가 핵심입니다. 내가 감각과 기획을 맡는다면 상대는 숫자, 운영, 마감에 강한 사람이 좋습니다.",
-    ])}
-    ${longSection("관계와 배우자운", [
-      "관계운은 깊고 오래 가는 인연을 선호하는 쪽입니다. 많은 사람을 넓게 만나는 것보다 마음이 통하는 몇 사람과 안정적인 관계를 만드는 흐름이 강합니다. 다만 처음에는 상대를 오래 관찰하기 때문에 마음이 늦게 열리는 편으로 보일 수 있습니다.",
-      "배우자운은 생활 리듬과 약속을 지키는 사람을 만날 때 편안해집니다. 감정 표현이 과하게 빠른 사람보다는, 속도를 맞춰주고 현실적인 책임감이 있는 사람이 잘 맞습니다. 관계에서 조심할 점은 혼자 서운함을 쌓아두는 것입니다. 한 번에 터뜨리기보다 작은 불편함을 부드럽게 말하는 연습이 필요합니다.",
-    ])}
-    ${longSection("자식운과 가족운", [
-      "자식운과 가족운은 정서적 책임감이 강한 흐름으로 볼 수 있습니다. 가까운 사람의 기분을 잘 알아차리는 만큼, 가족 문제를 본인이 지나치게 떠안으면 피로가 쌓일 수 있습니다. 돌보는 마음은 장점이지만 모든 것을 대신 해결하려는 마음은 운을 무겁게 만듭니다.",
-      "자식이나 후배, 제자와의 인연에서는 가르치고 기다려주는 역할이 잘 맞습니다. 다만 기준 없이 다 받아주기보다 규칙을 세우고 그 안에서 따뜻하게 대하는 방식이 좋습니다. 가족운은 가까울수록 각자의 경계와 역할을 분명히 할 때 편안하게 흐릅니다.",
-    ])}
-    ${longSection("건강/컨디션 운", [
-      "건강은 사주로 질병을 단정할 수 없습니다. 다만 컨디션 패턴으로 보면 생각이 많아질수록 수면, 소화, 체온 리듬이 함께 흔들릴 수 있는 타입입니다. 머리는 계속 움직이는데 몸의 회복이 따라오지 않으면 쉽게 지치고 예민해질 수 있습니다.",
-      "몸을 따뜻하게 하고, 밤에 생각을 줄이는 루틴을 만들고, 일정한 식사와 수면 시간을 유지하는 것이 좋습니다. 물 기운이 강한 사람은 감정과 피로가 몸에 쌓이기 쉬우니 걷기, 스트레칭, 목욕, 기록하기처럼 순환을 만들어주는 습관이 도움이 됩니다.",
-    ])}
-    <div class="result-section">
-      <h4>나이대별 흐름</h4>
-      <div class="timeline-list">
-        ${renderTimeline([
-          ["18~23세", "방향 탐색", "관심사가 넓어지고 진로 기준을 세우는 시기입니다. 이때는 결과보다 경험의 폭이 중요하고, 맞지 않는 환경을 알아차리는 것도 큰 수확입니다."],
-          ["24~29세", "경험 축적", "일과 관계에서 시행착오가 늘지만 실력이 빠르게 쌓입니다. 자격, 포트폴리오, 실무 경험을 남기면 30대 운을 여는 기반이 됩니다."],
-          ["30~35세", "기반 형성", "전문성, 수입 구조, 생활 루틴을 안정시키기 좋습니다. 이 시기부터는 사람을 많이 만나는 것보다 나를 오래 믿어줄 관계를 만드는 것이 중요합니다."],
-          ["36~42세", "확장 운", "사람과 기회가 넓어지며 사업, 이직, 독립을 검토하기 좋은 흐름입니다. 단, 확장 전에 돈의 흐름과 계약 조건을 먼저 점검해야 합니다."],
-          ["43~49세", "관리 운", "무리한 확장보다 자산, 건강 루틴, 가족 관계 정리가 중요합니다. 이미 만든 기반을 지키고 재정비하면 후반 운이 안정됩니다."],
-          ["50세 이후", "정리와 권위", "경험이 말과 글, 조언, 교육, 운영 능력으로 바뀌는 시기입니다. 직접 뛰는 역할보다 기준을 제시하고 사람을 이끄는 역할이 편해집니다."],
-        ])}
-      </div>
-    </div>
-    <div class="result-section">
-      <h4>삼재 흐름</h4>
-      <p class="section-lead">${birthInfo.year ? `${birthInfo.year}년생 ${birthInfo.zodiac}띠 기준으로 본 삼재 흐름입니다.` : "생년월일을 입력하면 띠 기준 삼재 흐름을 계산해 보여줍니다."}</p>
-      <div class="samjae-grid">
-        ${samjae
-          .map(
-            (item) => `
-              <div class="samjae-card">
-                <b>${item.label}</b>
-                <span>${item.year}년 · ${item.age}세</span>
-                <p>${item.body}</p>
-              </div>
-            `,
-          )
-          .join("")}
-      </div>
-    </div>
-    <div class="result-section">
-      <h4>운이 트이는 구간과 조심할 구간</h4>
-      <div class="flow-grid">
-        ${renderFlowCards([
-          ["운이 트이는 구간", "30~35세", "실력과 수입 구조가 연결되기 시작하는 구간입니다. 이때 만든 포트폴리오, 자격, 평판이 이후 확장운의 발판이 됩니다."],
-          ...seed.timingRules.map((rule) => [rule.title, rule.ageRange, rule.body]),
-          ["관리해야 할 구간", "45~49세", "이미 만든 것을 지키는 힘이 중요합니다. 건강 루틴, 가족 역할, 자산 구조를 정리하지 않으면 피로가 커질 수 있습니다."],
-        ])}
-      </div>
-    </div>
-    ${longSection("조심하면 좋은 선택", [
-      "이 명식은 감정이 올라온 순간 바로 결정하면 손해를 볼 수 있습니다. 큰 계약, 동업, 투자성 결정, 관계 정리는 하루 이상 시간을 두고 다시 보는 편이 좋습니다. 특히 누군가 강하게 밀어붙이는 분위기에서는 그 자리에서 답하지 않는 것이 운을 지키는 방식입니다.",
-      "반대로 너무 오래 고민해서 기회를 놓치는 것도 주의해야 합니다. 기준을 세운 뒤에는 작은 실행을 먼저 해보는 것이 좋습니다. 운이 트이는 사람은 운이 좋아서만 트이는 것이 아니라, 흐름이 왔을 때 이미 준비된 구조를 가지고 있는 사람입니다.",
-    ])}
-    ${unknownTime ? resultSection("출생 시간 미입력 안내", seed.luckRules.unknownTime) : ""}
-    ${disclaimer("삼재와 나이대별 흐름은 확정 예언이 아니라 띠와 전통 명리 해석을 바탕으로 한 참고용 경향입니다. 실제 대운/세운은 정확한 생년월일시와 절기 기준 계산이 필요합니다.")}
+    ${disclaimer("이 화면은 정적 문구 풀이가 아니라 만세력/명리 계산값을 정리한 결과입니다. 다만 출생시간이 없거나 24절기 시각 데이터가 부족한 경우에는 해당 항목을 추정하지 않고 제한 사항으로 표시합니다.")}
   `;
 }
 
-function renderCalendarDataSection(day) {
-  return resultSection(
-    "만세력 DB 조회",
-    `입력한 날짜의 DB 기준값입니다. 음력 ${day.lunar_year}년 ${day.lunar_month}월 ${day.lunar_day}일, 세차 ${day.year_ganji || "미상"}, 월건 ${day.month_ganji || "미상"}, 일진 ${day.day_ganji || "미상"}로 조회됐습니다.`,
-  );
+function analyzeSaju(data) {
+  const unknownTime = data.unknownTime === "true" || !data.birthTime;
+  const yearPillar = parsePillar(data.calendarDay.year_ganji);
+  const monthPillar = parsePillar(data.calendarDay.month_ganji);
+  const dayPillar = parsePillar(data.calendarDay.day_ganji);
+  const hourPillar = unknownTime ? null : calculateHourPillar(dayPillar.stem, data.birthTime);
+  const pillars = { year: yearPillar, month: monthPillar, day: dayPillar, hour: hourPillar };
+  const dayMaster = stemInfo(dayPillar.stem);
+  const elementScore = calculateElementScore(pillars);
+  const tenGodScore = calculateTenGodScore(dayMaster, pillars);
+  const hiddenStemReport = getHiddenStemReport(dayMaster, pillars);
+  const pattern = determinePattern(dayMaster, monthPillar);
+  const usefulGods = determineUsefulGods(dayMaster, elementScore, monthPillar);
+  const daewoon = calculateDaewoon(data, yearPillar, monthPillar);
+  const sewoon = calculateSewoon(data, dayMaster, pillars);
+  const luckSignals = judgeLuckSignals(dayMaster, sewoon);
+
+  return {
+    input: {
+      name: data.nickname || "사용자",
+      birthDate: data.birthDate,
+      birthTime: unknownTime ? "미상" : data.birthTime,
+      gender: data.gender || "선택 안 함",
+      calendar: data.calendar || "양력",
+    },
+    calendarDay: data.calendarDay,
+    pillars,
+    dayMaster,
+    elementScore,
+    tenGodScore,
+    hiddenStemReport,
+    pattern,
+    usefulGods,
+    daewoon,
+    sewoon,
+    luckSignals,
+    keySignals: [
+      `${dayMaster.stem}${dayMaster.element} 일간`,
+      `${elementScore.strongest.element} 과다`,
+      `${elementScore.weakest.element} 보완`,
+      `${pattern.name}`,
+      unknownTime ? "시주 미상" : `${hourPillar.stem}${hourPillar.branch} 시주`,
+    ],
+  };
+}
+
+function renderPillarSection(analysis) {
+  const items = [
+    ["연주", analysis.pillars.year],
+    ["월주", analysis.pillars.month],
+    ["일주", analysis.pillars.day],
+    ["시주", analysis.pillars.hour],
+  ];
+
+  return `
+    <div class="result-section">
+      <h4>사주 명식</h4>
+      <div class="pillar-grid">
+        ${items
+          .map(([label, pillar]) => {
+            const value = pillar ? `${pillar.stem}${pillar.branch}` : "미상";
+            const sub = pillar ? `${stemInfo(pillar.stem).element}/${branchInfo(pillar.branch).element}` : "출생시간 필요";
+            return `<div class="pillar"><b>${value}</b><span>${label}</span><small>${sub}</small></div>`;
+          })
+          .join("")}
+      </div>
+      <p class="section-lead">음력 ${analysis.calendarDay.lunar_year}년 ${analysis.calendarDay.lunar_month}월 ${analysis.calendarDay.lunar_day}일, 세차 ${analysis.calendarDay.year_ganji}, 월건 ${analysis.calendarDay.month_ganji}, 일진 ${analysis.calendarDay.day_ganji}</p>
+    </div>
+  `;
+}
+
+function renderElementSection(analysis) {
+  return `
+    <div class="result-section">
+      <h4>오행 점수</h4>
+      <div class="element-bars">${renderElementBars(analysis.elementScore.percent)}</div>
+      <p class="section-lead">천간, 지지 본기, 지장간을 가중치로 반영했습니다. 가장 강한 기운은 ${analysis.elementScore.strongest.element}, 가장 약한 기운은 ${analysis.elementScore.weakest.element}입니다.</p>
+    </div>
+  `;
+}
+
+function renderTenGodSection(analysis) {
+  return `
+    <div class="result-section">
+      <h4>십성 분포</h4>
+      <div class="calc-grid">
+        ${Object.entries(analysis.tenGodScore.percent)
+          .map(([name, value]) => `<div class="calc-cell"><span>${name}</span><b>${value}%</b></div>`)
+          .join("")}
+      </div>
+    </div>
+  `;
+}
+
+function renderHiddenStemSection(analysis) {
+  return `
+    <div class="result-section">
+      <h4>지장간 반영</h4>
+      <div class="data-table">
+        ${analysis.hiddenStemReport
+          .map((row) => `<div><b>${row.label}</b><span>${row.branch}지장간: ${row.hidden.map((item) => `${item.stem}(${item.tenGod})`).join(", ")}</span></div>`)
+          .join("")}
+      </div>
+    </div>
+  `;
+}
+
+function renderPatternSection(analysis) {
+  return `
+    <div class="result-section">
+      <h4>격국 · 용신 후보</h4>
+      <div class="flow-grid">
+        <div class="flow-card"><span>격국 후보</span><b>${analysis.pattern.name}</b><p>${analysis.pattern.reason}</p></div>
+        <div class="flow-card"><span>용신 후보</span><b>${analysis.usefulGods.yongshin}</b><p>${analysis.usefulGods.reason}</p></div>
+        <div class="flow-card"><span>희신/기신 후보</span><b>${analysis.usefulGods.heeshin} / ${analysis.usefulGods.gishin}</b><p>오행 과다/부족과 일간 강약을 기준으로 잡은 1차 후보입니다.</p></div>
+      </div>
+    </div>
+  `;
+}
+
+function renderDaewoonSection(analysis) {
+  return `
+    <div class="result-section">
+      <h4>대운 분석</h4>
+      <p class="section-lead">${analysis.daewoon.note}</p>
+      <div class="timeline-list">
+        ${analysis.daewoon.cycles
+          .map((cycle) => `<div class="timeline-item"><span>${cycle.ageText}</span><div><b>${cycle.pillar}</b><p>${cycle.summary}</p></div></div>`)
+          .join("")}
+      </div>
+    </div>
+  `;
+}
+
+function renderSewoonSection(analysis) {
+  return `
+    <div class="result-section">
+      <h4>세운 신호</h4>
+      <div class="timeline-list">
+        ${analysis.sewoon
+          .map((year) => `<div class="timeline-item"><span>${year.year}년</span><div><b>${year.pillar} · ${year.age}세</b><p>${year.signals.join(" / ")}</p></div></div>`)
+          .join("")}
+      </div>
+    </div>
+  `;
+}
+
+function renderCareerMoneySection(analysis) {
+  return `
+    <div class="result-section">
+      <h4>관운 · 재물운 · 이직운 계산 신호</h4>
+      <div class="flow-grid">
+        <div class="flow-card"><span>관운</span><b>${analysis.luckSignals.official.level}</b><p>${analysis.luckSignals.official.reason}</p></div>
+        <div class="flow-card"><span>재물운</span><b>${analysis.luckSignals.wealth.level}</b><p>${analysis.luckSignals.wealth.reason}</p></div>
+        <div class="flow-card"><span>이직운</span><b>${analysis.luckSignals.change.level}</b><p>${analysis.luckSignals.change.reason}</p></div>
+      </div>
+    </div>
+  `;
+}
+
+function buildGptPrompt(analysis) {
+  return `아래 사주 계산 결과를 바탕으로 한국어 장문 사주풀이를 작성해줘.
+
+요구사항:
+- 계산값에 근거해서만 해석하고, 없는 데이터를 지어내지 말 것.
+- 출생시간이 미상이면 시주/자식운/말년운/세부 직업운은 불확실하다고 표시할 것.
+- 어린 시절, 성향, 건강/컨디션, 금전운, 직업운, 사업운, 배우자/관계운, 자식운, 대운/세운, 조심할 시기, 운이 트이는 시기를 길게 풀어쓸 것.
+- "겨울에 핀 꽃", "마른 땅에 내리는 비"처럼 사주 구조에 맞는 비유를 하나 만들되, 계산값과 연결할 것.
+- 질병 진단, 투자 확정, 합격/이직 보장처럼 단정적인 표현은 피하고 참고용으로 쓸 것.
+
+[입력]
+이름: ${analysis.input.name}
+생년월일: ${analysis.input.birthDate} (${analysis.input.calendar})
+출생시간: ${analysis.input.birthTime}
+성별: ${analysis.input.gender}
+
+[만세력]
+음력: ${analysis.calendarDay.lunar_year}-${analysis.calendarDay.lunar_month}-${analysis.calendarDay.lunar_day}
+연주: ${pillarText(analysis.pillars.year)}
+월주: ${pillarText(analysis.pillars.month)}
+일주: ${pillarText(analysis.pillars.day)}
+시주: ${pillarText(analysis.pillars.hour)}
+일간: ${analysis.dayMaster.stem}(${analysis.dayMaster.element}, ${analysis.dayMaster.yinyang})
+
+[오행 점수]
+${Object.entries(analysis.elementScore.raw).map(([key, value]) => `${key}: ${value}점 (${analysis.elementScore.percent[key]}%)`).join("\n")}
+
+[십성 분포]
+${Object.entries(analysis.tenGodScore.raw).map(([key, value]) => `${key}: ${value}점 (${analysis.tenGodScore.percent[key]}%)`).join("\n")}
+
+[지장간]
+${analysis.hiddenStemReport.map((row) => `${row.label} ${row.branch}: ${row.hidden.map((item) => `${item.stem}/${item.tenGod}`).join(", ")}`).join("\n")}
+
+[격국/용신 후보]
+격국 후보: ${analysis.pattern.name} - ${analysis.pattern.reason}
+용신 후보: ${analysis.usefulGods.yongshin}
+희신 후보: ${analysis.usefulGods.heeshin}
+기신 후보: ${analysis.usefulGods.gishin}
+판단 이유: ${analysis.usefulGods.reason}
+
+[대운]
+${analysis.daewoon.note}
+${analysis.daewoon.cycles.map((cycle) => `${cycle.ageText}: ${cycle.pillar} - ${cycle.summary}`).join("\n")}
+
+[세운]
+${analysis.sewoon.map((year) => `${year.year}년(${year.age}세) ${year.pillar}: ${year.signals.join(", ")}`).join("\n")}
+
+[운 신호]
+관운: ${analysis.luckSignals.official.level} - ${analysis.luckSignals.official.reason}
+재물운: ${analysis.luckSignals.wealth.level} - ${analysis.luckSignals.wealth.reason}
+이직운: ${analysis.luckSignals.change.level} - ${analysis.luckSignals.change.reason}`;
+}
+
+function calculateHourPillar(dayStem, birthTime) {
+  const hour = Number(String(birthTime).slice(0, 2));
+  if (!Number.isFinite(hour)) return null;
+  const branchIndex = hour === 23 ? 0 : Math.floor((hour + 1) / 2) % 12;
+  const startStemByDayStem = { 갑: 0, 기: 0, 을: 2, 경: 2, 병: 4, 신: 4, 정: 6, 임: 6, 무: 8, 계: 8 };
+  const stemIndex = (startStemByDayStem[dayStem] + branchIndex) % 10;
+  return makePillar(stems[stemIndex][0], branches[branchIndex][0]);
+}
+
+function calculateElementScore(pillars) {
+  const raw = Object.fromEntries(elementOrder.map((element) => [element, 0]));
+  Object.values(pillars)
+    .filter(Boolean)
+    .forEach((pillar) => {
+      raw[stemInfo(pillar.stem).element] += 10;
+      raw[branchInfo(pillar.branch).element] += 6;
+      branchInfo(pillar.branch).hidden.forEach((stem, index) => {
+        raw[stemInfo(stem).element] += [5, 3, 1][index] || 1;
+      });
+    });
+  const total = Object.values(raw).reduce((sum, value) => sum + value, 0) || 1;
+  const percent = Object.fromEntries(Object.entries(raw).map(([key, value]) => [key, Math.round((value / total) * 100)]));
+  const sorted = Object.entries(raw).sort((a, b) => b[1] - a[1]);
+  return { raw, percent, strongest: { element: sorted[0][0], score: sorted[0][1] }, weakest: { element: sorted.at(-1)[0], score: sorted.at(-1)[1] } };
+}
+
+function calculateTenGodScore(dayMaster, pillars) {
+  const names = ["비견", "겁재", "식신", "상관", "편재", "정재", "편관", "정관", "편인", "정인"];
+  const raw = Object.fromEntries(names.map((name) => [name, 0]));
+  Object.values(pillars)
+    .filter(Boolean)
+    .forEach((pillar) => {
+      raw[getTenGod(dayMaster, stemInfo(pillar.stem))] += 10;
+      branchInfo(pillar.branch).hidden.forEach((stem, index) => {
+        raw[getTenGod(dayMaster, stemInfo(stem))] += [5, 3, 1][index] || 1;
+      });
+    });
+  const total = Object.values(raw).reduce((sum, value) => sum + value, 0) || 1;
+  const percent = Object.fromEntries(Object.entries(raw).map(([key, value]) => [key, Math.round((value / total) * 100)]));
+  return { raw, percent };
+}
+
+function getTenGod(dayMaster, target) {
+  const sameYinYang = dayMaster.yinyang === target.yinyang;
+  if (dayMaster.element === target.element) return sameYinYang ? "비견" : "겁재";
+  if (elementFeeds[dayMaster.element] === target.element) return sameYinYang ? "식신" : "상관";
+  if (elementControls[dayMaster.element] === target.element) return sameYinYang ? "편재" : "정재";
+  if (elementControls[target.element] === dayMaster.element) return sameYinYang ? "편관" : "정관";
+  if (elementFeeds[target.element] === dayMaster.element) return sameYinYang ? "편인" : "정인";
+  return "비견";
+}
+
+function getHiddenStemReport(dayMaster, pillars) {
+  return Object.entries(pillars)
+    .filter(([, pillar]) => pillar)
+    .map(([key, pillar]) => ({
+      label: { year: "연지", month: "월지", day: "일지", hour: "시지" }[key],
+      branch: pillar.branch,
+      hidden: branchInfo(pillar.branch).hidden.map((stem) => ({ stem, tenGod: getTenGod(dayMaster, stemInfo(stem)) })),
+    }));
+}
+
+function determinePattern(dayMaster, monthPillar) {
+  const monthBranch = branchInfo(monthPillar.branch);
+  const mainStem = monthBranch.hidden[0];
+  const tenGod = getTenGod(dayMaster, stemInfo(mainStem));
+  return {
+    name: `${tenGod}격 후보`,
+    reason: `월지 ${monthPillar.branch}의 주 지장간 ${mainStem}이 일간 ${dayMaster.stem} 기준 ${tenGod}으로 작동합니다.`,
+  };
+}
+
+function determineUsefulGods(dayMaster, elementScore, monthPillar) {
+  const strongest = elementScore.strongest.element;
+  const weakest = elementScore.weakest.element;
+  const controllingStrong = Object.entries(elementControls).find(([, controlled]) => controlled === strongest)?.[0] || weakest;
+  const dayElementWeak = elementScore.raw[dayMaster.element] <= elementScore.weakest.score + 4;
+  const yongshin = dayElementWeak ? dayMaster.element : controllingStrong;
+  const heeshin = dayElementWeak ? Object.entries(elementFeeds).find(([, fed]) => fed === dayMaster.element)?.[0] || weakest : weakest;
+  return {
+    yongshin,
+    heeshin,
+    gishin: strongest,
+    reason: `월지 ${monthPillar.branch} 계절성과 오행 점수상 ${strongest}이 강하고 ${weakest}이 약합니다. 일간 ${dayMaster.stem}의 강약과 균형을 기준으로 1차 후보를 잡았습니다.`,
+  };
+}
+
+function calculateDaewoon(data, yearPillar, monthPillar) {
+  const gender = data.gender || "선택 안 함";
+  const yearStem = stemInfo(yearPillar.stem);
+  const forward = gender === "남성" ? yearStem.yinyang === "양" : gender === "여성" ? yearStem.yinyang === "음" : null;
+  const directionText = forward === null ? "성별 미선택으로 순행/역행 판단 보류" : forward ? "순행" : "역행";
+  const monthIndex = gapjaIndex(monthPillar.stem, monthPillar.branch);
+  const birthYear = Number(data.birthDate?.slice(0, 4)) || new Date().getFullYear();
+  const start = forward === null ? null : calculateDaewoonStart(data.birthDate, forward);
+  const cycles = Array.from({ length: 8 }, (_, index) => {
+    const step = forward === false ? -(index + 1) : index + 1;
+    const pillar = gapjaAt(monthIndex + step);
+    const ageStart = start ? `${start.age + index * 10}~${start.age + index * 10 + 9}세` : `${index + 1}번째 대운`;
+    const stemTenGod = getTenGod(stemInfo(parsePillar(data.calendarDay.day_ganji).stem), stemInfo(pillar.stem));
+    return {
+      ageText: ageStart,
+      pillar: `${pillar.stem}${pillar.branch}`,
+      summary: `${stemTenGod} 기운이 열리는 10년 단위 흐름입니다.${start ? ` ${start.termName} 기준 ${start.days}일 차이로 시작 나이를 계산했습니다.` : ` ${birthYear}년 출생자의 정확 시작 나이는 성별과 절기 기준이 필요합니다.`}`,
+    };
+  });
+  const startText = start
+    ? `대운 시작 나이: 약 ${start.age}세 ${start.months}개월. ${start.termName}까지 ${start.days}일을 3일=1년 기준으로 환산했습니다.`
+    : "대운 시작 나이: 성별 미선택으로 계산 보류.";
+  return {
+    note: `${directionText}. ${startText} 현재 계산은 절기 날짜 기준 근사치이며, 시/분 단위 정밀 보정은 한국천문연구원 24절기 시각 데이터 연결 후 더 정확해집니다.`,
+    cycles,
+  };
+}
+
+function calculateDaewoonStart(birthDate, forward) {
+  const birth = parseLocalDate(birthDate);
+  if (!birth) return null;
+  const terms = getJieTermsAround(birth.getFullYear());
+  const target = forward
+    ? terms.find((term) => term.date > birth)
+    : [...terms].reverse().find((term) => term.date < birth);
+  if (!target) return null;
+  const msPerDay = 24 * 60 * 60 * 1000;
+  const days = Math.max(1, Math.round(Math.abs(target.date - birth) / msPerDay));
+  const totalMonths = Math.round(days * 4);
+  const age = Math.max(1, Math.floor(totalMonths / 12));
+  const months = totalMonths % 12;
+  return { age, months, days, termName: target.name };
+}
+
+function getJieTermsAround(year) {
+  return [year - 1, year, year + 1]
+    .flatMap((itemYear) => getSolarTermsForYear(itemYear))
+    .filter((term) => term.type === "jie")
+    .sort((a, b) => a.date - b.date);
+}
+
+function getSolarTermsForYear(year) {
+  const constants = year < 2000 ? solarTermConstants20 : solarTermConstants21;
+  const yy = year % 100;
+  return solarTerms.map(([name, month, type], index) => {
+    const day = Math.floor(yy * 0.2422 + constants[index] - Math.floor((yy - 1) / 4));
+    return { name, type, date: new Date(year, month - 1, day) };
+  });
+}
+
+function parseLocalDate(value) {
+  const [year, month, day] = String(value || "").split("-").map(Number);
+  if (!year || !month || !day) return null;
+  return new Date(year, month - 1, day);
+}
+
+function calculateSewoon(data, dayMaster, pillars) {
+  const birthYear = Number(data.birthDate?.slice(0, 4)) || new Date().getFullYear();
+  const currentYear = new Date().getFullYear();
+  return Array.from({ length: 10 }, (_, index) => {
+    const year = currentYear + index;
+    const pillar = yearGanji(year);
+    const tenGod = getTenGod(dayMaster, stemInfo(pillar.stem));
+    const clashTargets = [pillars.year, pillars.month, pillars.day, pillars.hour].filter(Boolean).filter((item) => branchClashes[item.branch] === pillar.branch);
+    const signals = [`천간 ${pillar.stem}${topicParticle(pillar.stem)} ${tenGod}`];
+    if (["정관", "편관"].includes(tenGod)) signals.push("관운/직장/책임 신호");
+    if (["정재", "편재"].includes(tenGod)) signals.push("재물/계약/거래 신호");
+    if (["식신", "상관"].includes(tenGod)) signals.push("표현/성과/이직 검토 신호");
+    if (clashTargets.length) signals.push(`${clashTargets.map((item) => item.branch).join(",")}지와 충: 변화 압력`);
+    return { year, age: year - birthYear + 1, pillar: `${pillar.stem}${pillar.branch}`, tenGod, signals };
+  });
+}
+
+function topicParticle(value) {
+  const code = String(value).charCodeAt(0);
+  if (code < 0xac00 || code > 0xd7a3) return "은";
+  return (code - 0xac00) % 28 === 0 ? "는" : "은";
+}
+
+function judgeLuckSignals(dayMaster, sewoon) {
+  const officialYears = sewoon.filter((year) => year.signals.some((signal) => signal.includes("관운")));
+  const wealthYears = sewoon.filter((year) => year.signals.some((signal) => signal.includes("재물")));
+  const changeYears = sewoon.filter((year) => year.signals.some((signal) => signal.includes("이직") || signal.includes("변화")));
+  return {
+    official: {
+      level: officialYears.length ? "활성" : "약함",
+      reason: officialYears.length ? `${officialYears.map((item) => `${item.year}년`).join(", ")}에 관성 세운이 들어옵니다.` : "향후 10년 세운 천간에서 관성 신호가 강하게 잡히지 않습니다.",
+    },
+    wealth: {
+      level: wealthYears.length ? "활성" : "보통",
+      reason: wealthYears.length ? `${wealthYears.map((item) => `${item.year}년`).join(", ")}에 재성 세운이 들어옵니다.` : "향후 10년 세운 천간에서 재성 신호가 적어 무리한 확장보다 구조 관리가 중요합니다.",
+    },
+    change: {
+      level: changeYears.length ? "강함" : "보통",
+      reason: changeYears.length ? `${changeYears.map((item) => `${item.year}년`).join(", ")}에 식상/충 신호가 있어 변화와 이동 압력이 커집니다.` : "충이나 식상 신호가 크게 몰리지 않아 급한 변화보다 누적형 흐름입니다.",
+    },
+  };
+}
+
+function parsePillar(value = "") {
+  const short = formatGanjiShort(value);
+  return makePillar(short.charAt(0), short.charAt(1));
+}
+
+function makePillar(stem, branch) {
+  return { stem, branch };
+}
+
+function stemInfo(stem) {
+  const item = stems.find(([name]) => name === stem) || stems[0];
+  return { stem: item[0], element: item[1], yinyang: item[2] };
+}
+
+function branchInfo(branch) {
+  const item = branches.find(([name]) => name === branch) || branches[0];
+  return { branch: item[0], element: item[1], yinyang: item[2], hidden: item[3] };
 }
 
 function formatGanjiShort(value) {
-  if (!value || value === "조회 중") return value;
-  return String(value).split("(")[0];
+  return String(value || "").split("(")[0].trim();
 }
 
-function getDayMaster(dayGanji = "") {
-  const stem = formatGanjiShort(dayGanji).charAt(0);
-  const stemMap = {
-    갑: {
-      label: "갑목 일간",
-      element: "wood",
-      description: "큰 나무처럼 기준을 세우고 위로 뻗는 목 기운을 중심으로 봅니다.",
-    },
-    을: {
-      label: "을목 일간",
-      element: "wood",
-      description: "꽃과 풀처럼 유연하게 살아남고 섬세하게 자라는 목 기운을 중심으로 봅니다.",
-    },
-    병: {
-      label: "병화 일간",
-      element: "fire",
-      description: "태양처럼 드러내고 밝히는 화 기운을 중심으로 봅니다.",
-    },
-    정: {
-      label: "정화 일간",
-      element: "fire",
-      description: "촛불처럼 한곳을 비추고 온기를 전하는 화 기운을 중심으로 봅니다.",
-    },
-    무: {
-      label: "무토 일간",
-      element: "earth",
-      description: "산처럼 버티고 중심을 잡는 토 기운을 중심으로 봅니다.",
-    },
-    기: {
-      label: "기토 일간",
-      element: "earth",
-      description: "밭처럼 받아들이고 길러내는 토 기운을 중심으로 봅니다.",
-    },
-    경: {
-      label: "경금 일간",
-      element: "metal",
-      description: "큰 쇠처럼 결단하고 다듬는 금 기운을 중심으로 봅니다.",
-    },
-    신: {
-      label: "신금 일간",
-      element: "metal",
-      description: "보석처럼 섬세한 기준과 완성도를 가진 금 기운을 중심으로 봅니다.",
-    },
-    임: {
-      label: "임수 일간",
-      element: "water",
-      description: "큰 강물처럼 넓게 흐르고 받아들이는 수 기운을 중심으로 봅니다.",
-    },
-    계: {
-      label: "계수 일간",
-      element: "water",
-      description: "비와 샘물처럼 조용히 스며드는 수 기운을 중심으로 봅니다.",
-    },
-  };
-
-  return (
-    stemMap[stem] || {
-      label: "만세력 조회",
-      element: "water",
-      description: "입력한 날짜의 만세력 데이터를 기준으로 풀이합니다.",
-    }
-  );
+function gapjaIndex(stem, branch) {
+  return Array.from({ length: 60 }, (_, index) => gapjaAt(index)).findIndex((item) => item.stem === stem && item.branch === branch);
 }
 
-function getElementBars(dayElement) {
-  const base = { 목: 42, 화: 42, 토: 42, 금: 42, 수: 42 };
-  const boost = {
-    wood: "목",
-    fire: "화",
-    earth: "토",
-    metal: "금",
-    water: "수",
-  }[dayElement];
-
-  if (boost) base[boost] = 78;
-  return base;
+function gapjaAt(index) {
+  const normalized = positiveModulo(index, 60);
+  return { stem: stems[normalized % 10][0], branch: branches[normalized % 12][0] };
 }
 
-async function fetchCalendarDay(date) {
-  const staticDay = await fetchStaticCalendarDay(date);
+function yearGanji(year) {
+  return gapjaAt(year - 1984);
+}
+
+function pillarText(pillar) {
+  return pillar ? `${pillar.stem}${pillar.branch}` : "미상";
+}
+
+function onlyNumber(value) {
+  return String(value || "").replace(/\D/g, "");
+}
+
+function renderElementBars(values) {
+  return Object.entries(values)
+    .map(
+      ([label, value]) => `
+        <div class="element-bar">
+          <span>${elementLabels[label] || label}</span>
+          <div><i style="width: ${value}%"></i></div>
+          <b>${value}%</b>
+        </div>
+      `,
+    )
+    .join("");
+}
+
+async function fetchCalendarDay(date, calendar = "양력") {
+  const staticDay = await fetchStaticCalendarDay(date, calendar);
   if (staticDay) return staticDay;
 
   const config = window.SUPABASE_CONFIG;
   if (!config?.url || !config?.anonKey) return null;
-
-  const endpoint = `${config.url.replace(/\/$/, "")}/rest/v1/calendar_days?date=eq.${encodeURIComponent(date)}&select=*`;
+  const [year, month, day] = String(date || "").split("-").map(Number);
+  const filter =
+    calendar === "음력"
+      ? `lunar_year=eq.${year}&lunar_month=eq.${month}&lunar_day=eq.${day}`
+      : `date=eq.${encodeURIComponent(date)}`;
+  const endpoint = `${config.url.replace(/\/$/, "")}/rest/v1/calendar_days?${filter}&select=*`;
 
   try {
     const response = await fetch(endpoint, {
-      headers: {
-        apikey: config.anonKey,
-        Authorization: `Bearer ${config.anonKey}`,
-      },
+      headers: { apikey: config.anonKey, Authorization: `Bearer ${config.anonKey}` },
     });
-
     if (!response.ok) return null;
     const rows = await response.json();
     return rows[0] || null;
@@ -583,17 +827,18 @@ async function fetchCalendarDay(date) {
   }
 }
 
-async function fetchStaticCalendarDay(date) {
-  const year = date?.slice(0, 4);
+async function fetchStaticCalendarDay(date, calendar = "양력") {
+  const year = Number(date?.slice(0, 4));
   if (!year) return null;
 
   try {
-    const response = await fetch(`data/calendar/${year}.json`);
-    if (!response.ok) return null;
-    const rows = await response.json();
-    const row = rows.find((item) => item.date === date);
+    const rows = (await Promise.all(getCalendarYearsToSearch(year, calendar).map(loadCalendarRows))).flat();
+    const [inputYear, inputMonth, inputDay] = String(date || "").split("-").map(Number);
+    const row =
+      calendar === "음력"
+        ? rows.find((item) => item.ly === inputYear && item.lm === inputMonth && item.ld === inputDay)
+        : rows.find((item) => item.date === date);
     if (!row) return null;
-
     return {
       date: row.date,
       solar_year: row.sy,
@@ -615,84 +860,20 @@ async function fetchStaticCalendarDay(date) {
   }
 }
 
-function getSajuSeed(data, birthInfo) {
-  const seed = window.FORTUNE_SEED?.saju || {};
-  const month = getBirthMonth(data.birthDate);
-  const metaphor =
-    seed.seasonalMetaphors?.find((item) => item.months.includes(month)) ||
-    seed.seasonalMetaphors?.[0] || {
-      title: "차분히 자기 계절을 기다리는 사주",
-      body: "초반보다 시간이 갈수록 자기 색이 분명해지는 흐름입니다.",
-    };
-  const example = seed.examples?.[data.birthDate];
-
-  return {
-    metaphor,
-    example,
-    timingRules: seed.timingRules || [],
-    luckRules: {
-      officialWeak: seed.luckRules?.officialWeak || "",
-      wealthMiddle: seed.luckRules?.wealthMiddle || "",
-      unknownTime: seed.luckRules?.unknownTime || "출생 시간이 없으면 시주 관련 해석은 제한됩니다.",
-    },
-    birthInfo,
-  };
+async function loadCalendarRows(year) {
+  const response = await fetch(`data/calendar/${year}.json`);
+  if (!response.ok) return [];
+  return response.json();
 }
 
-function longSection(title, paragraphs) {
-  return `
-    <div class="result-section long-reading">
-      <h4>${title}</h4>
-      ${paragraphs.map((paragraph) => `<p>${paragraph}</p>`).join("")}
-    </div>
-  `;
-}
-
-function renderTimeline(items) {
-  return items
-    .map(
-      ([age, title, body]) => `
-        <div class="timeline-item">
-          <span>${age}</span>
-          <div>
-            <b>${title}</b>
-            <p>${body}</p>
-          </div>
-        </div>
-      `,
-    )
-    .join("");
-}
-
-function renderFlowCards(items) {
-  return items
-    .map(
-      ([label, age, body]) => `
-        <div class="flow-card">
-          <span>${label}</span>
-          <b>${age}</b>
-          <p>${body}</p>
-        </div>
-      `,
-    )
-    .join("");
+function getCalendarYearsToSearch(year, calendar) {
+  return calendar === "음력" ? [year - 1, year, year + 1] : [year];
 }
 
 function getBirthInfo(birthDate) {
-  const year = birthDate ? Number(birthDate.slice(0, 4)) : 1995;
-  const animals = ["쥐", "소", "호랑이", "토끼", "용", "뱀", "말", "양", "원숭이", "닭", "개", "돼지"];
+  const year = birthDate ? Number(birthDate.slice(0, 4)) : new Date().getFullYear();
   const index = positiveModulo(year - 2020, 12);
-
-  return {
-    year,
-    zodiac: animals[index],
-    zodiacIndex: index,
-  };
-}
-
-function getBirthMonth(birthDate) {
-  const month = birthDate ? Number(birthDate.slice(5, 7)) : 12;
-  return Number.isFinite(month) && month >= 1 && month <= 12 ? month : 12;
+  return { year, zodiac: animals[index], zodiacIndex: index };
 }
 
 function getSamjaeInfo(birthYear) {
@@ -706,28 +887,11 @@ function getSamjaeInfo(birthYear) {
   ];
   const group = groups.find((item) => item.members.includes(zodiacIndex)) || groups[0];
   const labels = ["들삼재", "눌삼재", "날삼재"];
-  const bodies = [
-    "새 변수가 들어오는 시기로 봅니다. 무리한 확장보다 계약, 관계, 지출 구조를 먼저 점검하는 편이 좋습니다.",
-    "삼재 기운이 머무는 시기로 봅니다. 큰 방향을 흔들기보다 체력, 돈, 사람 문제를 차분히 관리하는 것이 좋습니다.",
-    "정리하고 빠져나오는 시기로 봅니다. 오래 끌던 문제를 정돈하되, 마지막까지 방심하지 않는 태도가 필요합니다.",
-  ];
-  const startYear = currentYear - 12;
-  const endYear = currentYear + 24;
   const matches = [];
-
-  for (let year = startYear; year <= endYear; year += 1) {
-    const yearZodiac = positiveModulo(year - 2020, 12);
-    const samjaeIndex = group.targets.indexOf(yearZodiac);
-    if (samjaeIndex >= 0) {
-      matches.push({
-        year,
-        age: year - birthYear + 1,
-        label: labels[samjaeIndex],
-        body: bodies[samjaeIndex],
-      });
-    }
+  for (let year = currentYear - 12; year <= currentYear + 24; year += 1) {
+    const samjaeIndex = group.targets.indexOf(positiveModulo(year - 2020, 12));
+    if (samjaeIndex >= 0) matches.push({ year, age: year - birthYear + 1, label: labels[samjaeIndex] });
   }
-
   return matches.filter((item) => item.year >= currentYear).slice(0, 6);
 }
 
@@ -737,116 +901,66 @@ function positiveModulo(value, divisor) {
 
 function renderCompatibilityResult(data) {
   return `
-    <div class="score-card">
-      <p>${data.relation || "관계"} 궁합 점수</p>
-      <h4>82점</h4>
-    </div>
-    <div class="keyword-row">
-      ${["대화의 리듬", "서로 다른 속도", "따뜻한 보완"].map((keyword) => `<span class="tag">${keyword}</span>`).join("")}
-    </div>
-    ${resultSection("끌리는 지점", `${data.myName || "나"}의 현실감과 ${data.theirName || "상대"}의 유연함이 만나면 서로의 선택을 넓혀주는 조합으로 볼 수 있습니다.`)}
-    ${resultSection("조율 포인트", "한쪽은 빠른 결론을 원하고 다른 한쪽은 충분한 여지를 원할 수 있습니다. 약속과 감정 표현의 속도를 미리 맞추면 관계가 편해집니다.")}
-    ${resultSection("오늘의 대화 팁", "정답을 고르기보다 서로의 기준을 묻는 질문이 좋습니다. 짧은 확인 한마디가 오해를 줄입니다.")}
+    <div class="score-card"><p>${data.relation || "관계"} 궁합 점수</p><h4>82점</h4></div>
+    <div class="keyword-row">${["대화의 리듬", "서로 다른 속도", "조율 필요"].map((keyword) => `<span class="tag">${keyword}</span>`).join("")}</div>
+    ${resultSection("궁합 초안", `${data.myName || "나"}와 ${data.theirName || "상대"}의 생년월일 기반 궁합 계산은 다음 단계에서 사주 계산 엔진을 양쪽에 적용해 확장합니다.`)}
     ${disclaimer()}
   `;
 }
 
 function renderDailyResult(data) {
   return `
-    <div class="score-card">
-      <p>${data.nickname || "오늘"}의 총운</p>
-      <h4>맑음 76%</h4>
-    </div>
-    <div class="keyword-row">
-      ${["세이지", "6", data.focus || "전체"].map((keyword) => `<span class="tag">${keyword}</span>`).join("")}
-    </div>
-    ${resultSection("오늘의 흐름", "작은 일을 끝까지 마무리할 때 기분 좋은 속도가 생깁니다. 새 일을 크게 벌이기보다 이미 시작한 것을 정리해보세요.")}
-    ${resultSection("분야별 힌트", "관계에서는 짧고 다정한 확인이 좋고, 일에서는 우선순위를 세 개 이하로 줄이면 집중력이 살아납니다.")}
-    ${resultSection("피하면 좋은 패턴", "기분이 복잡할수록 바로 답장을 쓰기보다 한 번 읽고 잠시 두는 편이 좋습니다.")}
+    <div class="score-card"><p>${data.nickname || "오늘"}의 총운</p><h4>맑음 76%</h4></div>
+    <div class="keyword-row">${["정리", "작은 선택", "말조심"].map((keyword) => `<span class="tag">${keyword}</span>`).join("")}</div>
+    ${resultSection("오늘의 흐름", `${data.focus || "전체"} 영역에서는 급하게 결론내리기보다 정리하고 확인하는 태도가 좋습니다.`)}
     ${disclaimer()}
   `;
 }
 
 function renderNamingResult(data) {
-  const surname = data.surname || "김";
-  const options = [
-    [`${surname}하린`, "맑고 부드러운 흐름"],
-    [`${surname}서윤`, "단정하고 밝은 인상"],
-    [`${surname}이안`, "현대적이고 안정적인 리듬"],
-  ];
-
+  const names = ["서윤", "하린", "이안", "나겸"];
   return `
-    <div class="score-card">
-      <p>${data.purpose || "작명"} 후보</p>
-      <h4>${data.mood || "밝은"} 결</h4>
+    <div class="score-card"><p>${data.surname || "새"}씨 이름 후보</p><h4>${data.mood || "밝은"} 결</h4></div>
+    <div class="name-grid">
+      ${names.map((name) => `<div class="name-option"><b>${data.surname || ""}${name}</b><span>${data.purpose || "이름"} 후보</span></div>`).join("")}
     </div>
-    <div class="result-section">
-      <h4>이름 후보</h4>
-      <div class="name-grid">
-        ${options
-          .map(([name, note]) => `<div class="name-option"><b>${name}</b><span>${note}</span></div>`)
-          .join("")}
-      </div>
-    </div>
-    ${resultSection("추천 방향", "받침이 부드럽게 이어지는 이름이 성씨와 잘 어울립니다. 밝은 이미지를 원한다면 모음이 선명한 후보를 우선 비교해보세요.")}
-    ${resultSection("검토 메모", `${data.avoid ? `${data.avoid} 계열의 글자는 후보에서 제외하는 방향으로 볼 수 있습니다.` : "피하고 싶은 글자를 입력하면 후보 필터링 기준으로 사용할 수 있습니다."}`)}
-    ${disclaimer("실제 출생 신고나 개명 전에는 최신 인명용 한자와 공식 기준을 별도로 확인하세요.")}
+    ${resultSection("작명 메모", "작명은 음오행, 한자 자원오행, 발음, 획수, 가족 선호도를 함께 봐야 하므로 다음 단계에서 별도 계산 데이터로 확장합니다.")}
+    ${disclaimer()}
   `;
-}
-
-function renderElementBars(elements) {
-  return Object.entries(elements)
-    .map(
-      ([label, value]) => `
-        <div class="element-bar">
-          <span>${label}</span>
-          <div class="bar-track"><div class="bar-fill" style="width:${value}%"></div></div>
-          <span>${value}</span>
-        </div>
-      `,
-    )
-    .join("");
 }
 
 function resultSection(title, body) {
-  return `
-    <div class="result-section">
-      <h4>${title}</h4>
-      <p>${body}</p>
-    </div>
-  `;
+  return `<div class="result-section"><h4>${title}</h4><p>${body}</p></div>`;
 }
 
-function disclaimer(extra = "") {
-  return `
-    <p class="disclaimer">
-      본 결과는 재미와 자기이해를 위한 참고용 콘텐츠입니다.
-      건강, 투자, 법률, 관계의 중대한 결정은 현실적인 정보와 함께 판단하세요.
-      ${extra}
-    </p>
-  `;
+function disclaimer(text = "이 결과는 재미와 자기이해를 위한 참고용입니다. 중요한 의사결정은 현실의 정보와 전문가 조언을 함께 확인하세요.") {
+  return `<div class="disclaimer">${text}</div>`;
 }
 
 function renderRecent() {
   $("#recentList").innerHTML = state.recent
     .map(
       (item) => `
-      <div class="recent-item">
-        <div>
-          <strong>${item.title}</strong>
+        <article class="recent-item">
           <span>${item.service}</span>
-        </div>
-        <small>${item.time}</small>
-      </div>
-    `,
+          <b>${item.title}</b>
+          <small>${item.time}</small>
+        </article>
+      `,
     )
     .join("");
 }
 
 function refreshIcons() {
-  if (window.lucide) {
-    window.lucide.createIcons();
-  }
+  if (window.lucide) window.lucide.createIcons();
 }
 
-document.addEventListener("DOMContentLoaded", init);
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
+
+init();
