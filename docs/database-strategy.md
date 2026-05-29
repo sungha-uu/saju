@@ -25,6 +25,8 @@
 | 일간별 해석 | DB 권장 | 운영 중 문구 개선 필요 |
 | 오행 과다/부족 해석 | DB 권장 | 콘텐츠 품질 개선 필요 |
 | 궁합 규칙 | DB 권장 | 점수/문구 조정 필요 |
+| 대운/세운 해석 규칙 | DB 권장 | 몇 살 전후 전환기, 이직운, 재물운 해석에 필요 |
+| 계절감 비유 문구 | DB 권장 | "겨울에 핀 꽃" 같은 풀이 스타일에 필요 |
 | 작명 한글 음절 | DB 권장 | 후보 관리와 필터링 필요 |
 | 한자/뜻/획수 | DB 권장 | 작명 후보 검색에 필요 |
 | AI 프롬프트 템플릿 | DB 또는 파일 | 버전 관리 필요 |
@@ -246,6 +248,31 @@ CREATE TABLE compatibility_rules (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 ```
+
+```sql
+CREATE TABLE advanced_saju_rules (
+  id TEXT PRIMARY KEY,
+  domain TEXT NOT NULL,
+  condition JSONB NOT NULL DEFAULT '{}',
+  metaphor TEXT,
+  interpretations JSONB NOT NULL DEFAULT '[]',
+  cautions JSONB NOT NULL DEFAULT '[]',
+  timing_hints JSONB NOT NULL DEFAULT '[]',
+  confidence TEXT NOT NULL DEFAULT 'medium',
+  version TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'active',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+```
+
+이 테이블은 아래와 같은 고급 풀이를 만들기 위해 사용한다.
+
+- 계절감 비유: 겨울에 핀 꽃, 큰 강물, 마른 땅의 단비 같은 표현
+- 관운: 조직, 직장, 직책, 시험, 규칙, 책임과의 관계
+- 재물운: 돈이 모이는 방식, 새는 패턴, 재성이 들어오는 대운/세운
+- 직업/이직운: 관성/재성/식상 흐름이 강해지는 나이대
+- 대운/세운: 몇 살 전후 운이 열리거나 조심해야 하는 구간
 
 ### 5.4 작명 데이터
 

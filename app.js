@@ -5,7 +5,13 @@ const services = {
     description: "생년월일시를 바탕으로 명식과 오행 흐름을 가볍게 살펴봅니다.",
     fields: [
       { name: "nickname", label: "이름 또는 별명", type: "text", placeholder: "예: 민지" },
-      { name: "birthDate", label: "생년월일", type: "date" },
+      {
+        name: "birthDate",
+        label: "생년월일",
+        type: "text",
+        placeholder: "예: 1985-12-02",
+        inputMode: "numeric",
+      },
       { name: "birthTime", label: "출생 시간", type: "time" },
       {
         name: "calendar",
@@ -22,9 +28,21 @@ const services = {
     description: "두 사람의 기본 흐름을 비교해 끌림과 조율 포인트를 확인합니다.",
     fields: [
       { name: "myName", label: "나의 이름", type: "text", placeholder: "예: 하린" },
-      { name: "myBirthDate", label: "나의 생년월일", type: "date" },
+      {
+        name: "myBirthDate",
+        label: "나의 생년월일",
+        type: "text",
+        placeholder: "예: 1994-06-08",
+        inputMode: "numeric",
+      },
       { name: "theirName", label: "상대 이름", type: "text", placeholder: "예: 도윤" },
-      { name: "theirBirthDate", label: "상대 생년월일", type: "date" },
+      {
+        name: "theirBirthDate",
+        label: "상대 생년월일",
+        type: "text",
+        placeholder: "예: 1992-11-21",
+        inputMode: "numeric",
+      },
       {
         name: "relation",
         label: "관계 유형",
@@ -195,7 +213,14 @@ function renderField(field) {
   return `
     <div class="field">
       <label for="${field.name}">${field.label}</label>
-      <input id="${field.name}" name="${field.name}" type="${field.type}" placeholder="${field.placeholder || ""}" />
+      <input
+        id="${field.name}"
+        name="${field.name}"
+        type="${field.type}"
+        placeholder="${field.placeholder || ""}"
+        ${field.inputMode ? `inputmode="${field.inputMode}"` : ""}
+        ${field.inputMode === "numeric" ? 'autocomplete="bday"' : ""}
+      />
     </div>
   `;
 }

@@ -222,6 +222,11 @@ AI에게 모든 해석을 자유 생성시키면 결과 품질이 흔들리므�
 - 십성 분포 해석
 - 계절별 일간 해석
 - 사주 구조별 키워드
+- 격국/용신/희신/기신 후보 해석
+- 관운, 재물운, 식상운, 인성운, 비겁운 해석
+- 대운/세운 흐름 해석
+- 나이별 전환기 해석
+- 계절감 기반 비유 문구: 예를 들어 겨울에 핀 꽃, 마른 땅의 물길 같은 표현
 - 출생 시간 모름일 때 제한 문구
 - 분야별 해석 템플릿: 성향, 강점, 일, 관계, 오늘 팁
 
@@ -245,6 +250,48 @@ type InterpretationRule = {
 - 명리학 공개 개념을 바탕으로 직접 작성한다.
 - 특정 책/사이트 문장을 복사하지 않는다.
 - 전문가 감수를 받으면 버전과 감수자를 기록한다.
+
+고급 풀이에 필요한 추가 데이터:
+
+```ts
+type AdvancedSajuRule = {
+  id: string;
+  domain:
+    | "season_metaphor"
+    | "career_luck"
+    | "wealth_luck"
+    | "official_luck"
+    | "relationship_luck"
+    | "children_luck"
+    | "health_condition"
+    | "daewoon"
+    | "yearly_luck";
+  condition: Record<string, unknown>;
+  metaphor?: string;
+  interpretation: string[];
+  caution: string[];
+  timingHints?: {
+    ageRange: string;
+    theme: string;
+    body: string;
+  }[];
+  confidence: "low" | "medium" | "high";
+};
+```
+
+예시:
+
+- 겨울 출생 + 목 일간: 추운 계절의 나무/꽃 비유
+- 수 기운 과다 + 금 기운 약함: 생각은 깊으나 구조화가 필요한 해석
+- 관성 약함: 조직/직장/규칙과의 관계 해석
+- 재성 흐름이 대운에서 들어오는 시기: 금전운이 열리는 구간 해석
+- 세운에서 관성이 강해지는 해: 이직, 직책, 평가, 시험, 계약 관련 해석
+
+주의:
+
+- "관운이 없다"처럼 단정하기보다 "관성의 힘이 약해 조직 규칙보다 자율성이 맞는 편"처럼 표현한다.
+- "28세에 반드시 이직한다"보다 "28세 전후 이직/역할 변화 가능성이 커지는 흐름"처럼 표현한다.
+- 출생 시간이 없으면 시주, 자식운, 말년운, 세부 대운 시작점의 신뢰도를 낮게 표시한다.
 
 ## 4. 궁합에 필요한 데이터
 
