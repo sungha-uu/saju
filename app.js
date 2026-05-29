@@ -8,9 +8,7 @@ const services = {
       {
         name: "birthDate",
         label: "생년월일",
-        type: "text",
-        placeholder: "예: 1985-12-02",
-        inputMode: "numeric",
+        type: "dateGroup",
       },
       { name: "birthTime", label: "출생 시간", type: "time" },
       {
@@ -31,17 +29,13 @@ const services = {
       {
         name: "myBirthDate",
         label: "나의 생년월일",
-        type: "text",
-        placeholder: "예: 1994-06-08",
-        inputMode: "numeric",
+        type: "dateGroup",
       },
       { name: "theirName", label: "상대 이름", type: "text", placeholder: "예: 도윤" },
       {
         name: "theirBirthDate",
         label: "상대 생년월일",
-        type: "text",
-        placeholder: "예: 1992-11-21",
-        inputMode: "numeric",
+        type: "dateGroup",
       },
       {
         name: "relation",
@@ -153,10 +147,10 @@ function renderService(serviceKey) {
   $("#serviceTitle").textContent = service.title;
   $("#serviceDescription").textContent = service.description;
   $("#formTitle").textContent = `${service.title} 정보 입력`;
-  $("#resultTitle").textContent = `${service.title} 미리보기`;
+  $("#resultTitle").textContent = `${service.title} 결과`;
 
   renderForm(serviceKey, service.fields);
-  renderResult(serviceKey, {});
+  hideResult();
   refreshIcons();
 }
 
@@ -210,6 +204,19 @@ function renderField(field) {
     `;
   }
 
+  if (field.type === "dateGroup") {
+    return `
+      <fieldset class="field date-group full" data-date-group="${field.name}">
+        <legend>${field.label}</legend>
+        <div class="date-inputs">
+          <input name="${field.name}Year" type="text" inputmode="numeric" autocomplete="bday-year" maxlength="4" placeholder="년" aria-label="${field.label} 년" />
+          <input name="${field.name}Month" type="text" inputmode="numeric" autocomplete="bday-month" maxlength="2" placeholder="월" aria-label="${field.label} 월" />
+          <input name="${field.name}Day" type="text" inputmode="numeric" autocomplete="bday-day" maxlength="2" placeholder="일" aria-label="${field.label} 일" />
+        </div>
+      </fieldset>
+    `;
+  }
+
   return `
     <div class="field">
       <label for="${field.name}">${field.label}</label>
@@ -227,12 +234,23 @@ function renderField(field) {
 
 function fillSample(serviceKey, form) {
   const samples = {
-    saju: { nickname: "민지", birthDate: "1995-03-12", birthTime: "14:30", calendar: "양력" },
+    saju: {
+      nickname: "민지",
+      birthDateYear: "1995",
+      birthDateMonth: "3",
+      birthDateDay: "12",
+      birthTime: "14:30",
+      calendar: "양력",
+    },
     compatibility: {
       myName: "하린",
-      myBirthDate: "1994-06-08",
+      myBirthDateYear: "1994",
+      myBirthDateMonth: "6",
+      myBirthDateDay: "8",
       theirName: "도윤",
-      theirBirthDate: "1992-11-21",
+      theirBirthDateYear: "1992",
+      theirBirthDateMonth: "11",
+      theirBirthDateDay: "21",
       relation: "연인",
     },
     daily: { nickname: "수아", focus: "전체", mood: "차분함" },
@@ -246,6 +264,8 @@ function fillSample(serviceKey, form) {
 }
 
 function renderLoadingThenResult(serviceKey, formData) {
+  const normalizedData = normalizeFormData(formData);
+  showResult();
   $("#resultCard").innerHTML = `
     <div class="result-section">
       <h4>결과를 정리하는 중</h4>
@@ -254,13 +274,33 @@ function renderLoadingThenResult(serviceKey, formData) {
   `;
 
   window.setTimeout(() => {
-    renderResult(serviceKey, formData);
+    renderResult(serviceKey, normalizedData);
     const service = services[serviceKey].title;
-    const title = makeRecentTitle(serviceKey, formData);
+    const title = makeRecentTitle(serviceKey, normalizedData);
     state.recent.unshift({ service, title, time: "방금 전" });
     state.recent = state.recent.slice(0, 5);
     renderRecent();
   }, 420);
+}
+
+function normalizeFormData(formData) {
+  const normalized = { ...formData };
+
+  ["birthDate", "myBirthDate", "theirBirthDate"].forEach((key) => {
+    const year = formData[`${key}Year`];
+    const month = formData[`${key}Month`];
+    const day = formData[`${key}Day`];
+
+    if (year || month || day) {
+      normalized[key] = [
+        String(year || "").padStart(4, "0"),
+        String(month || "").padStart(2, "0"),
+        String(day || "").padStart(2, "0"),
+      ].join("-");
+    }
+  });
+
+  return normalized;
 }
 
 function makeRecentTitle(serviceKey, data) {
@@ -278,6 +318,16 @@ function renderResult(serviceKey, formData) {
     naming: renderNamingResult,
   };
   $("#resultCard").innerHTML = renderers[serviceKey](formData);
+}
+
+function hideResult() {
+  $(".result-area").hidden = true;
+  $("#resultCard").innerHTML = "";
+  $(".favorite-button").classList.remove("active");
+}
+
+function showResult() {
+  $(".result-area").hidden = false;
 }
 
 function renderSajuResult(data) {

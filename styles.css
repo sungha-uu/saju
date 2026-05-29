@@ -315,6 +315,7 @@ button {
 }
 
 .field label,
+.date-group legend,
 .toggle-row span {
   color: var(--muted);
   font-size: 0.82rem;
@@ -331,6 +332,30 @@ button {
   color: var(--text);
   padding: 0 12px;
   outline: none;
+}
+
+.date-group {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.date-inputs {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr 1fr;
+  gap: 8px;
+}
+
+.date-inputs input {
+  text-align: center;
+}
+
+.date-inputs input:first-child {
+  text-align: left;
+}
+
+.result-area[hidden] {
+  display: none;
 }
 
 .field input:focus,
@@ -767,7 +792,8 @@ button {
 
   .field-grid,
   .pillar-grid,
-  .name-grid {
+  .name-grid,
+  .date-inputs {
     grid-template-columns: 1fr;
   }
 
