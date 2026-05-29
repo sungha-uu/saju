@@ -466,6 +466,14 @@ button {
   line-height: 1.6;
 }
 
+.result-section.long-reading p + p {
+  margin-top: 10px;
+}
+
+.section-lead {
+  margin-bottom: 12px !important;
+}
+
 .pillar-grid,
 .name-grid {
   display: grid;
@@ -556,6 +564,55 @@ button {
   margin: 0;
   color: var(--muted);
   line-height: 1.55;
+}
+
+.samjae-grid,
+.flow-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.flow-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.samjae-card,
+.flow-card {
+  min-height: 132px;
+  padding: 13px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 250, 243, 0.72);
+}
+
+.samjae-card b,
+.flow-card b,
+.flow-card span {
+  display: block;
+}
+
+.samjae-card b,
+.flow-card span {
+  color: var(--coral);
+  font-size: 0.82rem;
+}
+
+.samjae-card span,
+.flow-card b {
+  display: block;
+  margin-top: 4px;
+  color: var(--text);
+  font-weight: 800;
+}
+
+.samjae-card p,
+.flow-card p {
+  margin-top: 9px;
+  color: var(--muted);
+  line-height: 1.55;
+  font-size: 0.88rem;
 }
 
 .disclaimer {
@@ -668,6 +725,11 @@ button {
 
   .work-grid,
   .insight-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .samjae-grid,
+  .flow-grid {
     grid-template-columns: 1fr;
   }
 
