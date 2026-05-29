@@ -355,7 +355,7 @@ function renderSajuResult(data) {
     <div class="keyword-row">
       ${["수 기운 강함", "금 기운 보완", seed.metaphor.title, "관찰형 리더십"].map((keyword) => `<span class="tag">${keyword}</span>`).join("")}
     </div>
-    ${data.calendarDay ? renderCalendarDataSection(data.calendarDay) : resultSection("DB 연결 상태", "현재 GitHub Pages는 정적 seed로 결과를 보여주고 있습니다. Supabase URL과 anon key를 설정하고 calendar_days 테이블을 공개 읽기 정책으로 열면, 입력한 날짜의 음력/세차/월건/일진을 DB에서 조회해 표시합니다.")}
+    ${data.calendarDay ? renderCalendarDataSection(data.calendarDay) : resultSection("만세력 조회 안내", "입력한 날짜가 정적 만세력 범위 밖에 있습니다. 현재 GitHub Pages에서는 1900~2050년 음양력/세차/월건/일진을 연도별 JSON으로 조회합니다.")}
     <div class="result-section">
       <h4>사주 명식 목업</h4>
       <div class="pillar-grid">
@@ -472,6 +472,9 @@ function renderCalendarDataSection(day) {
 }
 
 async function fetchCalendarDay(date) {
+  const staticDay = await fetchStaticCalendarDay(date);
+  if (staticDay) return staticDay;
+
   const config = window.SUPABASE_CONFIG;
   if (!config?.url || !config?.anonKey) return null;
 
@@ -488,6 +491,38 @@ async function fetchCalendarDay(date) {
     if (!response.ok) return null;
     const rows = await response.json();
     return rows[0] || null;
+  } catch {
+    return null;
+  }
+}
+
+async function fetchStaticCalendarDay(date) {
+  const year = date?.slice(0, 4);
+  if (!year) return null;
+
+  try {
+    const response = await fetch(`data/calendar/${year}.json`);
+    if (!response.ok) return null;
+    const rows = await response.json();
+    const row = rows.find((item) => item.date === date);
+    if (!row) return null;
+
+    return {
+      date: row.date,
+      solar_year: row.sy,
+      solar_month: row.sm,
+      solar_day: row.sd,
+      lunar_year: row.ly,
+      lunar_month: row.lm,
+      lunar_day: row.ld,
+      is_leap_month: row.leap,
+      year_ganji: row.yg,
+      month_ganji: row.mg,
+      day_ganji: row.dg,
+      julian_day: row.jd,
+      weekday: row.wd,
+      source: "static-calendar-json",
+    };
   } catch {
     return null;
   }

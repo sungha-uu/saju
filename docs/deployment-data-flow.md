@@ -16,6 +16,7 @@ GitHub Pages에서 바로 반영되는 파일은 브라우저가 읽는 정적 �
 - `styles.css`
 - `app.js`
 - `data/fortune-seed.js`
+- `data/calendar/*.json`
 
 ## 2. 현재 구조
 
@@ -27,6 +28,7 @@ GitHub Pages에서 바로 반영되는 파일은 브라우저가 읽는 정적 �
 
 ```txt
 data/fortune-seed.js
+data/calendar/1900.json ... data/calendar/2050.json
 ```
 
 용도:
@@ -34,6 +36,7 @@ data/fortune-seed.js
 - GitHub Pages 화면에서 바로 사용
 - 계절 비유, 관운, 재물운, 이직운 문구를 프론트에서 표시
 - 예: 1985-12-02 입력 시 유성하 예시 풀이가 더 구체적으로 표시됨
+- 입력한 생년월일의 음력, 세차, 월건, 일진을 정적 만세력 JSON에서 조회
 
 ### 2.2 실제 DB용 데이터
 
@@ -88,6 +91,7 @@ GitHub Pages
   -> index.html
   -> app.js
   -> data/fortune-seed.js
+  -> data/calendar/{year}.json
 ```
 
 AI/DB까지 붙일 경우:
@@ -105,4 +109,4 @@ GitHub Pages
 
 SQL 파일은 브라우저에서 읽지 않는다. 그래서 `db/seed.sql`을 추가해도 `app.js`가 그 데이터를 읽지 않으면 화면 결과는 바뀌지 않는다.
 
-이 문제를 줄이기 위해 현재는 `data/fortune-seed.js`를 추가했고, `app.js`가 이 데이터를 읽어 결과에 반영하도록 연결했다.
+이 문제를 줄이기 위해 현재는 `data/fortune-seed.js`와 `data/calendar/*.json`을 추가했고, `app.js`가 이 데이터를 읽어 결과에 반영하도록 연결했다. 따라서 GitHub Pages에서도 1900~2050년 생년월일은 음력/세차/월건/일진을 조회할 수 있다.
