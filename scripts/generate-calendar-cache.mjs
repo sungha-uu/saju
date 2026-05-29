@@ -29,8 +29,8 @@ if (!serviceKey) {
   process.exit(1);
 }
 
-const lunarBaseUrl = "https://apis.data.go.kr/B090041/openapi/service/LrsrCldInfoService";
-const specialBaseUrl = "https://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService";
+const lunarBaseUrl = "http://apis.data.go.kr/B090041/openapi/service/LrsrCldInfoService";
+const specialBaseUrl = "http://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService";
 
 const sql = [];
 sql.push("-- Generated calendar cache. Do not edit by hand.");
@@ -68,8 +68,8 @@ console.log(`Wrote ${outPath}`);
 async function fetchSolarYear(year) {
   const rows = [];
   for (let month = 1; month <= 12; month += 1) {
-    const url = new URL(`${lunarBaseUrl}/getSolCalInfo`);
-    url.searchParams.set("serviceKey", serviceKey);
+    const url = new URL(`${lunarBaseUrl}/getLunCalInfo`);
+    url.searchParams.set("ServiceKey", serviceKey);
     url.searchParams.set("solYear", String(year));
     url.searchParams.set("solMonth", String(month).padStart(2, "0"));
     url.searchParams.set("numOfRows", "40");
@@ -84,7 +84,7 @@ async function fetchSolarYear(year) {
 
 async function fetchSolarTerms(year) {
   const url = new URL(`${specialBaseUrl}/get24DivisionsInfo`);
-  url.searchParams.set("serviceKey", serviceKey);
+  url.searchParams.set("ServiceKey", serviceKey);
   url.searchParams.set("solYear", String(year));
   url.searchParams.set("numOfRows", "30");
   url.searchParams.set("pageNo", "1");
@@ -97,13 +97,13 @@ async function fetchSolarTerms(year) {
 async function fetchJson(url) {
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error(`HTTP ${response.status}: ${url}`);
+    throw new Error(`HTTP ${response.status}: ${redactServiceKey(url)}`);
   }
   const text = await response.text();
   try {
     return JSON.parse(text);
   } catch (error) {
-    throw new Error(`Failed to parse JSON from ${url}: ${text.slice(0, 300)}`);
+    throw new Error(`Failed to parse JSON from ${redactServiceKey(url)}: ${text.slice(0, 300)}`);
   }
 }
 
@@ -181,12 +181,34 @@ function parseArgs(argv) {
 }
 
 async function readServiceKey() {
+  let key;
   if (args["key-file"]) {
     const raw = await fs.readFile(args["key-file"], "utf8");
-    return raw.trim();
+    key = raw.trim();
+  } else {
+    key = process.env.DATA_GO_KR_SERVICE_KEY;
   }
 
-  return process.env.DATA_GO_KR_SERVICE_KEY;
+  if (key && key.includes("%")) {
+    try {
+      return decodeURIComponent(key);
+    } catch {
+      return key;
+    }
+  }
+
+  return key;
+}
+
+function redactServiceKey(url) {
+  const safeUrl = new URL(url);
+  if (safeUrl.searchParams.has("ServiceKey")) {
+    safeUrl.searchParams.set("ServiceKey", "REDACTED");
+  }
+  if (safeUrl.searchParams.has("serviceKey")) {
+    safeUrl.searchParams.set("serviceKey", "REDACTED");
+  }
+  return safeUrl.toString();
 }
 
 function pad(value) {
