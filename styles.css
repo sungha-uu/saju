@@ -792,8 +792,7 @@ button {
 
   .field-grid,
   .pillar-grid,
-  .name-grid,
-  .date-inputs {
+  .name-grid {
     grid-template-columns: 1fr;
   }
 
