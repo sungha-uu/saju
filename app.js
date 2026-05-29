@@ -24,7 +24,7 @@ const services = {
         name: "question",
         label: "궁금한 점",
         type: "textarea",
-        placeholder: "예: 올해 가게를 하려고 하는데 괜찮을까?",
+        placeholder: "예: 올해 금전운 어때?",
         full: true,
       },
     ],
@@ -81,11 +81,43 @@ const services = {
   daily: {
     eyebrow: "DAILY FLOW",
     title: "오늘의 운세",
-    description: "오늘의 기분, 일, 관계 흐름을 짧고 산뜻한 카드로 확인합니다.",
+    description: "정밀 사주 운세와 간편 띠 운세를 함께 지원합니다.",
     fields: [
-      { name: "nickname", label: "별명", type: "text", placeholder: "예: 수아" },
-      { name: "focus", label: "관심 분야", type: "select", options: ["전체", "연애", "일", "돈", "인간관계", "컨디션"] },
-      { name: "mood", label: "오늘의 기분", type: "select", options: ["차분함", "들뜸", "피곤함", "집중됨", "복잡함"] },
+      { type: "section", label: "정밀 오늘운세" },
+      { name: "dailyName", label: "이름", type: "text", full: true },
+      { name: "dailyBirthDate", label: "생년월일", type: "dateGroup" },
+      { name: "dailyBirthTime", label: "출생 시간", type: "time" },
+      { name: "dailyCalendar", label: "양력/음력", type: "select", options: ["양력", "음력"] },
+      {
+        name: "dailyGender",
+        label: "성별",
+        type: "select",
+        placeholder: "성별 선택",
+        options: [
+          { label: "남성", value: "남성" },
+          { label: "여성", value: "여성" },
+        ],
+      },
+      { name: "dailyUnknownTime", label: "출생 시간을 몰라요", type: "checkbox" },
+      { type: "section", label: "간편 띠 운세" },
+      {
+        name: "zodiac",
+        label: "띠",
+        type: "select",
+        placeholder: "띠 선택",
+        options: ["쥐", "소", "호랑이", "토끼", "용", "뱀", "말", "양", "원숭이", "닭", "개", "돼지"].map((animal) => ({
+          label: `${animal}띠`,
+          value: animal,
+        })),
+      },
+      { name: "focus", label: "관심 분야", type: "select", options: ["전체", "연애", "일", "돈", "인간관계", "컨디션"], full: true },
+      {
+        name: "question",
+        label: "궁금한 점",
+        type: "textarea",
+        placeholder: "예: 오늘 계약해도 괜찮을까?",
+        full: true,
+      },
     ],
   },
   naming: {
@@ -340,12 +372,16 @@ function renderLoadingThenResult(serviceKey, formData) {
 async function renderResultWithData(serviceKey, formData) {
   const enrichedData = { ...formData };
   if (serviceKey === "saju" && formData.birthDate) enrichedData.calendarDay = await fetchCalendarDay(formData.birthDate, formData.calendar);
+  if (serviceKey === "daily" && formData.dailyBirthDate) {
+    enrichedData.calendarDay = await fetchCalendarDay(formData.dailyBirthDate, formData.dailyCalendar);
+    enrichedData.todayCalendarDay = await fetchCalendarDay(formatDate(new Date()), "양력");
+  }
   renderResult(serviceKey, enrichedData);
 }
 
 function normalizeFormData(formData) {
   const normalized = { ...formData };
-  ["birthDate", "myBirthDate", "theirBirthDate"].forEach((key) => {
+  ["birthDate", "myBirthDate", "theirBirthDate", "dailyBirthDate"].forEach((key) => {
     const year = onlyNumber(formData[`${key}Year`]);
     const month = onlyNumber(formData[`${key}Month`]);
     const day = onlyNumber(formData[`${key}Day`]);
@@ -886,6 +922,13 @@ function onlyNumber(value) {
   return String(value || "").replace(/\D/g, "");
 }
 
+function formatDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 function renderElementBars(values) {
   return Object.entries(values)
     .map(
@@ -1007,12 +1050,91 @@ function renderCompatibilityResult(data) {
 }
 
 function renderDailyResult(data) {
+  const hasPreciseInput = Boolean(data.dailyBirthDate && data.dailyGender && data.calendarDay);
+  const prompt = buildDailyPrompt(data, hasPreciseInput);
+  const title = hasPreciseInput ? `${data.dailyName || "사용자"}님의 정밀 오늘운세` : `${data.zodiac || "간편"}띠 오늘운세`;
+
   return `
-    <div class="score-card"><p>${data.nickname || "오늘"}의 총운</p><h4>맑음 76%</h4></div>
-    <div class="keyword-row">${["정리", "작은 선택", "말조심"].map((keyword) => `<span class="tag">${keyword}</span>`).join("")}</div>
-    ${resultSection("오늘의 흐름", `${data.focus || "전체"} 영역에서는 급하게 결론내리기보다 정리하고 확인하는 태도가 좋습니다.`)}
-    ${disclaimer()}
+    <div class="score-card"><p>${title}</p><h4>${hasPreciseInput ? "사주 기반" : "띠 기반"} 프롬프트</h4></div>
+    <div class="keyword-row">
+      ${[hasPreciseInput ? "정밀 오늘운세" : "간편 띠 운세", data.focus || "전체", data.question ? "질문 포함" : "일반 운세"].map((keyword) => `<span class="tag">${keyword}</span>`).join("")}
+    </div>
+    ${resultSection(
+      "입력 방식",
+      hasPreciseInput
+        ? "생년월일 기반 만세력 데이터와 오늘 날짜의 만세력 데이터를 함께 사용해 GPT 프롬프트를 생성했습니다."
+        : "정밀 정보가 부족하므로 띠와 관심 분야 중심의 간편 운세 프롬프트를 생성했습니다.",
+    )}
+    <div class="result-section">
+      <div class="prompt-head">
+        <h4>웹 GPT 붙여넣기용 프롬프트</h4>
+        <button class="ghost-button compact" type="button" data-action="copy-prompt"><i data-lucide="copy"></i>프롬프트 복사</button>
+      </div>
+      <textarea id="gptPrompt" class="prompt-box" readonly>${escapeHtml(prompt)}</textarea>
+    </div>
+    ${disclaimer("오늘의 운세는 참고용입니다. 정밀 모드는 사주 원국과 오늘 일진을 함께 보지만, 실제 선택은 현실 정보와 함께 판단하세요.")}
   `;
+}
+
+function buildDailyPrompt(data, hasPreciseInput) {
+  const today = new Date();
+  const todayText = new Intl.DateTimeFormat("ko-KR", { dateStyle: "full" }).format(today);
+  const common = `너는 명리학과 생활 상담에 능한 오늘의 운세 전문가다.
+아래 입력값을 바탕으로 한국어 오늘의 운세 리포트를 작성하라.
+
+출력 형식:
+- 결과는 전문 리포트처럼 제목, 요약 카드, 분야별 운세, 주의할 점, 오늘의 행동 가이드, 사용자 질문 답변으로 구성한다.
+- 가능한 경우 저장 가능한 단일 HTML 문서 형태로 출력한다.
+- 단정적인 예언, 투자/계약/건강 결과 보장, 질병 진단은 피하고 참고용으로 표현한다.
+
+[공통 입력]
+오늘 날짜: ${todayText}
+관심 분야: ${data.focus || "전체"}
+궁금한 점: ${data.question?.trim() || "없음"}`;
+
+  if (!hasPreciseInput) {
+    return `${common}
+
+[간편 띠 운세 입력]
+띠: ${data.zodiac || "미입력"}
+
+[작성 지시]
+- 띠 운세는 정밀 사주풀이가 아니라 간편 참고 운세임을 먼저 밝혀라.
+- 오늘의 기분 흐름, 관계, 일/돈, 컨디션, 조심할 말과 행동을 짧지 않게 풀어라.
+- 사용자가 질문을 입력했다면 띠 운세 수준에서 답하되, 정밀 판단은 생년월일 기반 운세가 필요하다고 안내하라.`;
+  }
+
+  const dayMaster = getDayMasterFromCalendar(data.calendarDay);
+  return `${common}
+
+[정밀 오늘운세 입력]
+이름: ${data.dailyName || "사용자"}
+생년월일: ${data.dailyBirthDate} (${data.dailyCalendar || "양력"})
+출생시간: ${data.dailyUnknownTime === "true" || !data.dailyBirthTime ? "미상" : data.dailyBirthTime}
+성별: ${data.dailyGender}
+
+[사용자 만세력]
+음력: ${data.calendarDay.lunar_year}-${data.calendarDay.lunar_month}-${data.calendarDay.lunar_day}
+연주: ${data.calendarDay.year_ganji}
+월주: ${data.calendarDay.month_ganji}
+일주: ${data.calendarDay.day_ganji}
+일간: ${dayMaster.stem}(${dayMaster.element}, ${dayMaster.yinyang})
+
+[오늘 만세력]
+세차: ${data.todayCalendarDay?.year_ganji || "미상"}
+월건: ${data.todayCalendarDay?.month_ganji || "미상"}
+일진: ${data.todayCalendarDay?.day_ganji || "미상"}
+
+[작성 지시]
+- 사용자 일간과 오늘 일진/월건/세차의 관계를 중심으로 오늘 운세를 해석하라.
+- 관심 분야를 우선해서 풀이하라.
+- 출생시간이 미상이면 시주 기반 판단은 제외하라.
+- 사용자가 질문을 입력했다면 오늘 날짜 기준으로 유리한 점, 조심할 점, 실행 전 체크리스트를 별도 섹션으로 작성하라.`;
+}
+
+function getDayMasterFromCalendar(day) {
+  const pillar = parsePillar(day?.day_ganji);
+  return stemInfo(pillar.stem);
 }
 
 function renderNamingResult(data) {
