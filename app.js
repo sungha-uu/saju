@@ -334,14 +334,16 @@ function renderSajuResult(data) {
   const unknownTime = data.unknownTime === "true";
   const birthInfo = getBirthInfo(data.birthDate);
   const samjae = getSamjaeInfo(birthInfo.year);
+  const seed = getSajuSeed(data, birthInfo);
 
   return `
     <div class="score-card">
       <p>${data.nickname || "사용자"}님의 종합 사주풀이</p>
       <h4>${birthInfo.zodiac}띠 · 수 기운 중심</h4>
     </div>
+    ${seed.example ? resultSection(seed.example.metaphor, seed.example.summary) : ""}
     <div class="keyword-row">
-      ${["수 기운 강함", "금 기운 보완", "늦게 단단해지는 운", "관찰형 리더십"].map((keyword) => `<span class="tag">${keyword}</span>`).join("")}
+      ${["수 기운 강함", "금 기운 보완", seed.metaphor.title, "관찰형 리더십"].map((keyword) => `<span class="tag">${keyword}</span>`).join("")}
     </div>
     <div class="result-section">
       <h4>사주 명식 목업</h4>
@@ -363,6 +365,7 @@ function renderSajuResult(data) {
       </div>
     </div>
     ${longSection("전체 총평", [
+      `${seed.metaphor.title}로 비유할 수 있습니다. ${seed.metaphor.body}`,
       "이 명식은 수 기운이 중심에 놓이고 목의 흐름이 이를 받아주는 형태로 읽을 수 있습니다. 사람과 상황을 단번에 밀어붙이기보다 먼저 분위기를 살피고, 속으로 여러 가능성을 비교한 뒤 움직이는 타입에 가깝습니다.",
       "장점은 감각, 관찰력, 적응력입니다. 반대로 약점은 생각이 너무 많아져 결정이 늦어지거나, 본인의 기준을 분명히 말하지 않아 주변 흐름에 끌려가는 점입니다. 운을 좋게 쓰려면 머릿속에 있는 감각을 문서, 숫자, 일정, 약속처럼 눈에 보이는 구조로 바꾸는 것이 중요합니다.",
     ])}
@@ -377,11 +380,14 @@ function renderSajuResult(data) {
     ${longSection("청년기와 직업운", [
       "20대 초중반은 방향을 하나로 고정하기보다 여러 선택지를 비교하는 시기입니다. 이때는 내가 뭘 좋아하는지보다, 어떤 환경에서 오래 버틸 수 있는지 확인하는 과정이 더 중요합니다. 처음 선택이 곧 평생의 답이라고 생각하면 오히려 운이 막히는 느낌을 받을 수 있습니다.",
       "직업적으로는 기획, 분석, 교육, 상담, 콘텐츠, 브랜딩, 데이터 정리, 서비스 운영처럼 사람의 흐름과 정보를 함께 다루는 일이 잘 맞습니다. 단순 반복만 있는 일보다는 관찰하고 해석하고 개선하는 역할에서 장점이 살아납니다. 30대 이후에는 경험이 쌓이면서 말, 글, 기획, 관리 능력이 수입과 연결되기 쉬운 흐름입니다.",
+      seed.luckRules.officialWeak,
     ])}
     ${longSection("금전운", [
       "재물운은 한 번에 크게 잡는 운보다 천천히 흐름을 만들고 지키는 쪽에 가깝습니다. 돈을 버는 감각 자체가 없는 사주는 아니지만, 감정이 흔들릴 때 소비나 결정도 같이 흔들릴 수 있습니다. 특히 인간관계, 기분 전환, 배움, 취향 소비 쪽으로 돈이 새기 쉽습니다.",
       "재물운을 좋게 쓰려면 자동 저축, 월별 예산, 고정비 점검, 장기 목표처럼 구조를 먼저 만들어야 합니다. 이 명식은 돈을 쫓을 때보다 실력과 신뢰가 쌓인 뒤 돈이 따라오는 흐름이 더 좋습니다. 투자성 결정은 즉흥보다 기록과 비교가 맞고, 남의 말만 듣고 움직이는 방식은 피하는 편이 안정적입니다.",
+      seed.luckRules.wealthMiddle,
     ])}
+    ${seed.example ? seed.example.sections.map((section) => resultSection(section.title, section.body)).join("") : ""}
     ${longSection("사업운", [
       "사업운은 있습니다. 다만 초반부터 크게 벌이는 방식보다는 작게 검증하고, 반복 고객을 만들고, 신뢰를 누적하는 방식이 맞습니다. 감각은 좋은데 운영 체계가 약하면 수익이 생겨도 새는 구멍이 생길 수 있으니, 가격표, 계약 조건, 정산 기준을 분명히 해야 합니다.",
       "잘 맞는 사업 방향은 콘텐츠, 교육, 상담, 취향 기반 브랜드, 데이터/리서치, 라이프스타일 서비스처럼 사람의 마음과 정보를 함께 읽는 분야입니다. 동업은 가능하지만 역할 분리가 핵심입니다. 내가 감각과 기획을 맡는다면 상대는 숫자, 운영, 마감에 강한 사람이 좋습니다.",
@@ -433,9 +439,8 @@ function renderSajuResult(data) {
       <div class="flow-grid">
         ${renderFlowCards([
           ["운이 트이는 구간", "30~35세", "실력과 수입 구조가 연결되기 시작하는 구간입니다. 이때 만든 포트폴리오, 자격, 평판이 이후 확장운의 발판이 됩니다."],
-          ["확장하기 좋은 구간", "36~42세", "사람, 일, 공간이 넓어지는 흐름입니다. 사업이나 독립을 생각한다면 이 시기에는 작은 검증을 거쳐 키우는 방식이 좋습니다."],
-          ["조심할 구간", "24~27세", "방향을 빨리 확정하려는 압박 때문에 선택이 흔들릴 수 있습니다. 조급한 이직, 충동 소비, 감정적 관계 정리를 조심하세요."],
-          ["관리해야 할 구간", "43~49세", "이미 만든 것을 지키는 힘이 중요합니다. 건강 루틴, 가족 역할, 자산 구조를 정리하지 않으면 피로가 커질 수 있습니다."],
+          ...seed.timingRules.map((rule) => [rule.title, rule.ageRange, rule.body]),
+          ["관리해야 할 구간", "45~49세", "이미 만든 것을 지키는 힘이 중요합니다. 건강 루틴, 가족 역할, 자산 구조를 정리하지 않으면 피로가 커질 수 있습니다."],
         ])}
       </div>
     </div>
@@ -443,9 +448,33 @@ function renderSajuResult(data) {
       "이 명식은 감정이 올라온 순간 바로 결정하면 손해를 볼 수 있습니다. 큰 계약, 동업, 투자성 결정, 관계 정리는 하루 이상 시간을 두고 다시 보는 편이 좋습니다. 특히 누군가 강하게 밀어붙이는 분위기에서는 그 자리에서 답하지 않는 것이 운을 지키는 방식입니다.",
       "반대로 너무 오래 고민해서 기회를 놓치는 것도 주의해야 합니다. 기준을 세운 뒤에는 작은 실행을 먼저 해보는 것이 좋습니다. 운이 트이는 사람은 운이 좋아서만 트이는 것이 아니라, 흐름이 왔을 때 이미 준비된 구조를 가지고 있는 사람입니다.",
     ])}
-    ${unknownTime ? resultSection("출생 시간 미입력 안내", "출생 시간이 없으면 시주와 말년운, 자식운, 세부 흐름 해석이 제한됩니다. 실제 서비스에서는 출생 시간을 입력했을 때 더 촘촘한 풀이를 제공합니다.") : ""}
+    ${unknownTime ? resultSection("출생 시간 미입력 안내", seed.luckRules.unknownTime) : ""}
     ${disclaimer("삼재와 나이대별 흐름은 확정 예언이 아니라 띠와 전통 명리 해석을 바탕으로 한 참고용 경향입니다. 실제 대운/세운은 정확한 생년월일시와 절기 기준 계산이 필요합니다.")}
   `;
+}
+
+function getSajuSeed(data, birthInfo) {
+  const seed = window.FORTUNE_SEED?.saju || {};
+  const month = getBirthMonth(data.birthDate);
+  const metaphor =
+    seed.seasonalMetaphors?.find((item) => item.months.includes(month)) ||
+    seed.seasonalMetaphors?.[0] || {
+      title: "차분히 자기 계절을 기다리는 사주",
+      body: "초반보다 시간이 갈수록 자기 색이 분명해지는 흐름입니다.",
+    };
+  const example = seed.examples?.[data.birthDate];
+
+  return {
+    metaphor,
+    example,
+    timingRules: seed.timingRules || [],
+    luckRules: {
+      officialWeak: seed.luckRules?.officialWeak || "",
+      wealthMiddle: seed.luckRules?.wealthMiddle || "",
+      unknownTime: seed.luckRules?.unknownTime || "출생 시간이 없으면 시주 관련 해석은 제한됩니다.",
+    },
+    birthInfo,
+  };
 }
 
 function longSection(title, paragraphs) {
@@ -497,6 +526,11 @@ function getBirthInfo(birthDate) {
     zodiac: animals[index],
     zodiacIndex: index,
   };
+}
+
+function getBirthMonth(birthDate) {
+  const month = birthDate ? Number(birthDate.slice(5, 7)) : 12;
+  return Number.isFinite(month) && month >= 1 && month <= 12 ? month : 12;
 }
 
 function getSamjaeInfo(birthYear) {
