@@ -4,10 +4,11 @@
  * Generate calendar cache SQL for PostgreSQL/Supabase.
  *
  * Requirements:
- * - DATA_GO_KR_SERVICE_KEY: service key issued by data.go.kr.
+ * - DATA_GO_KR_SERVICE_KEY: service key issued by data.go.kr, or --key-file temp.txt.
  *
  * Usage:
  *   DATA_GO_KR_SERVICE_KEY="..." node scripts/generate-calendar-cache.mjs --from 1900 --to 2100 --out db/calendar-cache.sql
+ *   node scripts/generate-calendar-cache.mjs --key-file temp.txt --from 1900 --to 2100 --out db/calendar-cache.sql
  *
  * Notes:
  * - This script intentionally runs outside GitHub Pages.
@@ -21,10 +22,10 @@ const args = parseArgs(process.argv.slice(2));
 const fromYear = Number(args.from || 1900);
 const toYear = Number(args.to || 2100);
 const outPath = args.out || "db/calendar-cache.sql";
-const serviceKey = process.env.DATA_GO_KR_SERVICE_KEY;
+const serviceKey = await readServiceKey();
 
 if (!serviceKey) {
-  console.error("Missing DATA_GO_KR_SERVICE_KEY. Get an API key from data.go.kr first.");
+  console.error("Missing service key. Set DATA_GO_KR_SERVICE_KEY or pass --key-file temp.txt.");
   process.exit(1);
 }
 
@@ -177,6 +178,15 @@ function parseArgs(argv) {
     }
   }
   return result;
+}
+
+async function readServiceKey() {
+  if (args["key-file"]) {
+    const raw = await fs.readFile(args["key-file"], "utf8");
+    return raw.trim();
+  }
+
+  return process.env.DATA_GO_KR_SERVICE_KEY;
 }
 
 function pad(value) {
