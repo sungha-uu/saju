@@ -274,13 +274,23 @@ function renderLoadingThenResult(serviceKey, formData) {
   `;
 
   window.setTimeout(() => {
-    renderResult(serviceKey, normalizedData);
+    renderResultWithData(serviceKey, normalizedData);
     const service = services[serviceKey].title;
     const title = makeRecentTitle(serviceKey, normalizedData);
     state.recent.unshift({ service, title, time: "방금 전" });
     state.recent = state.recent.slice(0, 5);
     renderRecent();
   }, 420);
+}
+
+async function renderResultWithData(serviceKey, formData) {
+  const enrichedData = { ...formData };
+
+  if (serviceKey === "saju" && formData.birthDate) {
+    enrichedData.calendarDay = await fetchCalendarDay(formData.birthDate);
+  }
+
+  renderResult(serviceKey, enrichedData);
 }
 
 function normalizeFormData(formData) {
@@ -345,6 +355,7 @@ function renderSajuResult(data) {
     <div class="keyword-row">
       ${["수 기운 강함", "금 기운 보완", seed.metaphor.title, "관찰형 리더십"].map((keyword) => `<span class="tag">${keyword}</span>`).join("")}
     </div>
+    ${data.calendarDay ? renderCalendarDataSection(data.calendarDay) : resultSection("DB 연결 상태", "현재 GitHub Pages는 정적 seed로 결과를 보여주고 있습니다. Supabase URL과 anon key를 설정하고 calendar_days 테이블을 공개 읽기 정책으로 열면, 입력한 날짜의 음력/세차/월건/일진을 DB에서 조회해 표시합니다.")}
     <div class="result-section">
       <h4>사주 명식 목업</h4>
       <div class="pillar-grid">
@@ -451,6 +462,35 @@ function renderSajuResult(data) {
     ${unknownTime ? resultSection("출생 시간 미입력 안내", seed.luckRules.unknownTime) : ""}
     ${disclaimer("삼재와 나이대별 흐름은 확정 예언이 아니라 띠와 전통 명리 해석을 바탕으로 한 참고용 경향입니다. 실제 대운/세운은 정확한 생년월일시와 절기 기준 계산이 필요합니다.")}
   `;
+}
+
+function renderCalendarDataSection(day) {
+  return resultSection(
+    "만세력 DB 조회",
+    `입력한 날짜의 DB 기준값입니다. 음력 ${day.lunar_year}년 ${day.lunar_month}월 ${day.lunar_day}일, 세차 ${day.year_ganji || "미상"}, 월건 ${day.month_ganji || "미상"}, 일진 ${day.day_ganji || "미상"}로 조회됐습니다.`,
+  );
+}
+
+async function fetchCalendarDay(date) {
+  const config = window.SUPABASE_CONFIG;
+  if (!config?.url || !config?.anonKey) return null;
+
+  const endpoint = `${config.url.replace(/\/$/, "")}/rest/v1/calendar_days?date=eq.${encodeURIComponent(date)}&select=*`;
+
+  try {
+    const response = await fetch(endpoint, {
+      headers: {
+        apikey: config.anonKey,
+        Authorization: `Bearer ${config.anonKey}`,
+      },
+    });
+
+    if (!response.ok) return null;
+    const rows = await response.json();
+    return rows[0] || null;
+  } catch {
+    return null;
+  }
 }
 
 function getSajuSeed(data, birthInfo) {
